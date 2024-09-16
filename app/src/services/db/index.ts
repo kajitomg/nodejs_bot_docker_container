@@ -1,5 +1,5 @@
 import { Services } from '../index';
-import {Postgresql} from './postgresql'
+import { Postgresql } from './postgresql'
 
 class DBService {
   private _postgres: Postgresql
@@ -18,4 +18,4 @@ class DBService {
   }
 }
 
-export {DBService}
+export default DBService

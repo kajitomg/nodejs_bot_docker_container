@@ -4,7 +4,7 @@ import { Services } from '../index';
 
 export default class ServerService {
   private app: Express = express()
-  public PORT: number = +(process.env.PORT || 5000)
+  public PORT: number = +(process.env.PORT || 3000)
   public services: Services
   
   constructor(services: Services) {

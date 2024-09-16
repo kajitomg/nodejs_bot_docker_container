@@ -1,6 +1,6 @@
-import path from 'path';
+const path =  require('path');
 
-export default {
+module.exports = {
     entry: './src/index.ts',
     target: 'node',
     mode: 'production',
@@ -8,6 +8,9 @@ export default {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
         clean:true
+    },
+    optimization: {
+        minimize: false,
     },
     resolve: {
         extensions: ['.ts', '.js']
