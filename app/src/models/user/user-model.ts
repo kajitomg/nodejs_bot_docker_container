@@ -12,8 +12,8 @@ interface IUser extends Model<InferAttributes<IUser>, InferCreationAttributes<IU
 }
 
 const userModel = sequelize.define<IUser>('user', {
-  id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-  chat_id: {type: DataTypes.INTEGER},
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  chat_id: {type: DataTypes.BIGINT, unique: true},
   username: {type: DataTypes.STRING},
   first_name: {type: DataTypes.STRING},
   last_session: {type: DataTypes.DATE}

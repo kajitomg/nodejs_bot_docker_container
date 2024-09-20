@@ -41,7 +41,7 @@ export const composeWizardScene = (...advancedSteps) => (
           
           /** ignore user action if it is neither message, nor callbackQuery */
           if (!ctx.message && !ctx.callbackQuery) return undefined;
-          
+
           return stepFn(ctx, () => unwrapCallback(ctx, nextScene), next);
         } catch (e) {
           console.log(e)

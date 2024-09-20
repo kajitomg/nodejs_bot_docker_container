@@ -2,6 +2,7 @@ import { Markup } from 'telegraf';
 import { bold, fmt } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import types from './types';
 
@@ -14,8 +15,8 @@ export const createAddCodeEndDialogScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Вернуться в меню X-Empire', types.ENTRY),
-        Markup.button.callback('Создать новый код', types.ADD_CODE),
+        Markup.button.callback('Вернуться в меню X-Empire', createNextScene(types.ENTRY)),
+        Markup.button.callback('Создать новый код', createNextScene(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     
@@ -36,7 +37,10 @@ export const createAddCodeEndDialogScene = composeWizardScene(
     const callback_data = ctx.update?.callback_query?.data;
     
     if (callback_data) {
-      ctx.wizard.state.nextScene = callback_data;
+      const nextScene = getNextScene(callback_data)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
     } else {
       await ctx.sendMessage('Вы вышли из меню создания кода X-Empire')
     }

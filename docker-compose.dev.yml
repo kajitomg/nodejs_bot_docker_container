@@ -5,7 +5,6 @@ services:
       context: ./app
       target: dev
     tty: true
-    restart: always
     working_dir: /opt/server
     volumes:
       - ./app:/opt/server

@@ -5,6 +5,7 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import createListMessage from '../../../helpers/create-list-message';
 import { createMessageSample, genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses, Games } from '../../../models';
 import types from './types';
@@ -30,7 +31,7 @@ export const createSearchCodesScene = composeWizardScene(
             Markup.button.callback('   <<<', 'prev_page'),
             Markup.button.callback(`${data?.page || '*'}/${data?.max_page || data?.page || '*'}(↻)`, 'force_update'),
             Markup.button.callback('   >>>   ', 'next_page'),
-            Markup.button.callback('Назад в меню', types.ENTRY),
+            Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
           ],{ columns: 3 }
         )
         
@@ -60,9 +61,9 @@ export const createSearchCodesScene = composeWizardScene(
     
     ctx.wizard.state.search_codes_count_prev = ctx.wizard.state.search_codes_count
     ctx.wizard.state.search_codes_count = count.count
-    ctx.wizard.state.search_codes_pagination.maxPages = Math.ceil(count.count / limit)
+    ctx.wizard.state.search_codes_pagination.maxPages = Math.ceil(count.count / limit) || 1
     
-    const isNeedUpdate = (!ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevPage !== ctx.wizard.state.search_codes_pagination.page)) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevMaxPages !== ctx.wizard.state.search_codes_pagination.maxPages) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_count_prev !== ctx.wizard.state.search_codes_count) && (ctx.wizard.state.search_codes_pagination.maxPages === ctx.wizard.state.search_codes_pagination.page)))
+    const isNeedUpdate = ctx.wizard.state.need_update || (!ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevPage !== ctx.wizard.state.search_codes_pagination.page)) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevMaxPages !== ctx.wizard.state.search_codes_pagination.maxPages) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_count_prev !== ctx.wizard.state.search_codes_count) && (ctx.wizard.state.search_codes_pagination.maxPages === ctx.wizard.state.search_codes_pagination.page)))
  
     if (isNeedUpdate) {
  
@@ -107,6 +108,7 @@ export const createSearchCodesScene = composeWizardScene(
       //@ts-ignore
       await ctx.telegram.editMessageText(ctx.chat.id, message.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup })
     }
+    ctx.wizard.state.need_update = false
     
     return ctx.wizard.next();
   },
@@ -119,7 +121,10 @@ export const createSearchCodesScene = composeWizardScene(
     
     if (callback_data) {
       
-      ctx.wizard.state.nextScene = callback_data;
+      const nextScene = getNextScene(callback_data)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
       ctx.wizard.state.search_codes_pagination.onPrevPage(callback_data, () => {
         ctx.wizard.state.nextScene = types.SEARCH_CODES;
       })
@@ -134,6 +139,7 @@ export const createSearchCodesScene = composeWizardScene(
       
       delete ctx.wizard.state.search_codes_message_sample
       ctx.wizard.state.nextScene = types.SEARCH_CODES;
+      ctx.wizard.state.need_update = true
       ctx.wizard.state.search_codes_search_query = messageText;
       
     }

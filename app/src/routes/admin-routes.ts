@@ -1,6 +1,6 @@
 import { Composer, Scenes } from 'telegraf';
+import start from '../handlers/start';
 import { ScenesTypes } from '../scenes';
-import userBot from './user-routes';
 
 export const adminUsers = [
   806145885,
@@ -8,6 +8,7 @@ export const adminUsers = [
 ]
 
 const adminBot = new Composer<Scenes.SceneContext>();
+
 
 adminBot.command('menu', async ctx => {
   return await ctx.scene.enter(ScenesTypes.menu.wizard.ENTRY)

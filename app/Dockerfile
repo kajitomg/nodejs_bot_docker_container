@@ -6,8 +6,6 @@ ENV NODE_PATH /opt/server/node_modules
 
 WORKDIR /opt/server/
 
-CMD [ "npm", "run", "dev" ]
-
 # production
 FROM node:20.12.0-alpine AS production
 RUN apk add --no-cache tzdata supervisor

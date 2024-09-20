@@ -3,6 +3,7 @@ import { bold, fmt } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Games } from '../../../models';
 import types from './types';
@@ -11,7 +12,7 @@ export const createAddCodeAddToDBScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад в меню', types.ADD_CODE),
+        Markup.button.callback('Назад в меню', createNextScene(types.ADD_CODE)),
         Markup.button.callback('Создать код', 'create-code'),
       ],{ columns: 2 }
     )
@@ -28,7 +29,10 @@ export const createAddCodeAddToDBScene = composeWizardScene(
     const callback_data = ctx.update?.callback_query?.data;
     
     if (callback_data) {
-      ctx.wizard.state.nextScene = callback_data;
+      const nextScene = getNextScene(callback_data)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
       if (callback_data === 'create-code') {
         const code = await codeController.createCode({
           name: ctx.wizard.state.code_name,

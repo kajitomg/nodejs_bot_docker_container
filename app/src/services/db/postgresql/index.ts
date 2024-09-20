@@ -22,7 +22,9 @@ class Postgresql {
   
   async start(models) {
     await this.sequelize.authenticate()
-    await this.sequelize.sync()
+    await this.sequelize.sync({
+      alter: true
+    })
     this.models = models
   }
 }

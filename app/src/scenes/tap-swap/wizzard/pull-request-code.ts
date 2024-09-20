@@ -4,6 +4,7 @@ import codeController from '../../../controllers/code-controller';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses, Games } from '../../../models';
 import types from './types';
@@ -22,7 +23,7 @@ export const createPullRequestCodeScene = composeWizardScene(
       limit
     })
     
-    ctx.wizard.state.pull_request_code_pagination.maxPages = Math.ceil(code.count / limit)
+    ctx.wizard.state.pull_request_code_pagination.maxPages = Math.ceil(code.count / limit) || 1
     
     if ( ctx.wizard.state.pull_request_code_pagination.maxPages < ctx.wizard.state.pull_request_code_pagination.page) {
       ctx.wizard.state.pull_request_code_pagination.page = ctx.wizard.state.pull_request_code_pagination.maxPages
@@ -46,7 +47,7 @@ export const createPullRequestCodeScene = composeWizardScene(
         Markup.button.callback('Принять', 'accept'),
         ctx.wizard.state.pull_request_code_pagination.prevPageButton('Предыдущий код'),
         ctx.wizard.state.pull_request_code_pagination.nextPageButton('Следующий код'),
-        Markup.button.callback('Назад в меню', types.ENTRY),
+        Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
       ],{ columns: 2 }
     )
     
@@ -67,7 +68,10 @@ export const createPullRequestCodeScene = composeWizardScene(
     const callbackData = ctx.update?.callback_query?.data;
     
     if (callbackData) {
-      ctx.wizard.state.nextScene = callbackData;
+      const nextScene = getNextScene(callbackData)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
       
       if(callbackData === 'accept') {
         ctx.wizard.state.status = 'accept';
@@ -84,6 +88,9 @@ export const createPullRequestCodeScene = composeWizardScene(
         ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE;
       })
       
+      if (ctx.wizard.state.nextScene === 'next_page' || ctx.wizard.state.nextScene === 'prev_page') {
+        delete ctx.wizard.state.nextScene
+      }
     } else {
       await ctx.sendMessage('Вы вышли из меню модерации кодов TapSwap')
     }

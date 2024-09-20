@@ -5,6 +5,7 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import createListMessage from '../../../helpers/create-list-message';
 import { createMessageSample, genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses, Games } from '../../../models';
 import types from './types';
@@ -31,7 +32,7 @@ export const createGetAllCodesScene = composeWizardScene(
               ctx.wizard.state.all_codes_pagination.prevPageButton(),
               Markup.button.callback(`${data?.page || '*'}/${data?.max_pages || data?.page || '*'}(↻)`, 'force_update'),
               ctx.wizard.state.all_codes_pagination.nextPageButton(),
-              Markup.button.callback('Назад в меню', types.ENTRY),
+              Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
             ],{ columns: 3 }
           )
           
@@ -57,7 +58,7 @@ export const createGetAllCodesScene = composeWizardScene(
       
       ctx.wizard.state.all_codes_count_prev = ctx.wizard.state.all_codes_count
       ctx.wizard.state.all_codes_count = count.count
-      ctx.wizard.state.all_codes_pagination.maxPages = Math.ceil(count.count / limit)
+      ctx.wizard.state.all_codes_pagination.maxPages = Math.ceil(count.count / limit) || 1
       
       const isNeedUpdate = (!ctx.wizard.state.all_codes_force_update && (ctx.wizard.state.all_codes_pagination.prevPage !== ctx.wizard.state.all_codes_pagination.page)) || (ctx.wizard.state.all_codes_force_update && (ctx.wizard.state.all_codes_pagination.prevMaxPages !== ctx.wizard.state.all_codes_pagination.maxPages) || (ctx.wizard.state.all_codes_force_update && (ctx.wizard.state.all_codes_count_prev !== ctx.wizard.state.all_codes_count) && (ctx.wizard.state.all_codes_pagination.maxPages === ctx.wizard.state.all_codes_pagination.page)))
       
@@ -107,7 +108,10 @@ export const createGetAllCodesScene = composeWizardScene(
     
     try {
       if (callback_data) {
-        ctx.wizard.state.nextScene = callback_data;
+        const nextScene = getNextScene(callback_data)
+        if (nextScene) {
+          ctx.wizard.state.nextScene = nextScene;
+        }
         ctx.wizard.state.all_codes_pagination.onPrevPage(callback_data, () => {
           ctx.wizard.state.nextScene = types.GET_ALL_CODES;
         })

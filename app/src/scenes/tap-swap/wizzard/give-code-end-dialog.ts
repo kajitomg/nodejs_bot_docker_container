@@ -2,6 +2,7 @@ import { Markup } from 'telegraf';
 import { bold, fmt } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import types from './types';
 
@@ -14,8 +15,8 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Вернуться в меню TapSwap', types.ENTRY),
-        Markup.button.callback('Предложить новый код', types.GIVE_CODE),
+        Markup.button.callback('Вернуться в меню TapSwap', createNextScene(types.ENTRY)),
+        Markup.button.callback('Предложить новый код', createNextScene(types.GIVE_CODE)),
       ],{ columns: 2 }
     )
     
@@ -36,7 +37,10 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     const callback_data = ctx.update?.callback_query?.data;
     
     if (callback_data) {
-      ctx.wizard.state.nextScene = callback_data;
+      const nextScene = getNextScene(callback_data)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
     } else {
       await ctx.sendMessage('Вы вышли из меню для предложений кода TapSwap')
     }

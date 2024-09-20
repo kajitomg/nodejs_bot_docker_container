@@ -5,7 +5,7 @@ import Slices from '../slices';
 export default async function (ctx: Context) {
   const chat_id = ctx.chat.id
   const author = ctx.from
-  
+
   try {
     const user = await Slices.user.crud.create({ chat_id, username: author.username, first_name: author.first_name })
     if(user.result === 0) {
@@ -15,6 +15,7 @@ export default async function (ctx: Context) {
       await ctx.sendMessage('Спасибо за использование бота!\n\nСписок команд:\n\n/games - Выбор игры')
     }
   } catch (error) {
+    console.log(error)
     console.log(author.username + ' ' + error.response?.error_code + ' ' + error.response?.description)
   }
 }

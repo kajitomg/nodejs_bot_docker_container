@@ -2,6 +2,7 @@ import { Markup } from 'telegraf';
 import { bold, fmt } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import types from './types';
 
@@ -10,10 +11,10 @@ export const createGiveCodeScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Изменить название', types.GIVE_CODE_NAME),
-        Markup.button.callback('Изменить содержание', types.GIVE_CODE_CONTENT),
-        Markup.button.callback('Отправить код', types.GIVE_CODE_ADD_TO_DB),
-        Markup.button.callback('Назад в меню', types.ENTRY),
+        Markup.button.callback('Изменить название', createNextScene(types.GIVE_CODE_NAME)),
+        Markup.button.callback('Изменить содержание', createNextScene(types.GIVE_CODE_CONTENT)),
+        Markup.button.callback('Отправить код', createNextScene(types.GIVE_CODE_ADD_TO_DB)),
+        Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
       ],{ columns: 2 }
     )
     
@@ -31,7 +32,10 @@ export const createGiveCodeScene = composeWizardScene(
     const sceneId = ctx.update?.callback_query?.data;
     
     if (sceneId) {
-      ctx.wizard.state.nextScene = sceneId;
+      const nextScene = getNextScene(sceneId)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
       if (sceneId === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
         ctx.wizard.state.nextScene = types.GIVE_CODE;
         ctx.wizard.state.warning = 'Заполните обязательные поля';

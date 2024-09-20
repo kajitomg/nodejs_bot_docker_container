@@ -2,6 +2,7 @@ import { Markup } from 'telegraf';
 import { bold, fmt } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import types from './types';
 
@@ -9,7 +10,7 @@ export const createAddCodeContentScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад в меню', types.ADD_CODE),
+        Markup.button.callback('Назад в меню', createNextScene(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     
@@ -33,7 +34,10 @@ export const createAddCodeContentScene = composeWizardScene(
     ctx.telegram.editMessageReplyMarkup(chatId, delete_message_id, undefined, undefined)
     
     if (callback_query) {
-      ctx.wizard.state.nextScene = callback_query;
+      const nextScene = getNextScene(callback_query)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
     } else {
       ctx.wizard.state.nextScene = types.ADD_CODE;
       ctx.wizard.state.code_content = messageText;

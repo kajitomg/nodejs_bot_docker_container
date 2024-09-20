@@ -14,7 +14,8 @@ export const createEntryScene = composeWizardScene(
         Markup.button.callback('Blum', ScenesTypes.blum.wizard.ENTRY),
       ],{ columns: 2 }
     )
-    await send(ctx, fmt(bold('Меню'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
+
+    await send(ctx, fmt(bold(ctx.i18n.t('menu.header')),'\n\n',italic(ctx.i18n.t('menu.body'))), markup)
     return ctx.wizard.next();
   },
   async (ctx, done) => {
@@ -23,7 +24,7 @@ export const createEntryScene = composeWizardScene(
     if (sceneId) {
       ctx.wizard.state.nextScene = sceneId;
     } else {
-      await ctx.sendMessage('Вы вышли из сцены меню')
+      await ctx.sendMessage(ctx.i18n.t('menu.exit'))
     }
     
     return done();

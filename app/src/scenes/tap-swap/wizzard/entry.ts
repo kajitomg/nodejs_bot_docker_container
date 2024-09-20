@@ -1,6 +1,7 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { adminUsers } from '../../../routes/admin-routes';
 import { ScenesTypes } from '../../index';
@@ -13,24 +14,27 @@ export const createEntryScene = composeWizardScene(
     const admin = adminUsers.includes(chatId)
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Получить все коды', types.GET_ALL_CODES),
-        Markup.button.callback('Найти код по названию', types.SEARCH_CODES),
-        Markup.button.callback('Предложить код', types.GIVE_CODE),
-        Markup.button.callback('Модерировать коды', types.PULL_REQUEST_CODE, !admin),
-        Markup.button.callback('Создать код', types.ADD_CODE, !admin),
-        Markup.button.callback('Назад в меню', ScenesTypes.menu.wizard.ENTRY),
+        Markup.button.callback('Получить все коды', createNextScene(types.GET_ALL_CODES)),
+        Markup.button.callback('Найти код по названию', createNextScene(types.SEARCH_CODES)),
+        Markup.button.callback('Предложить код', createNextScene(types.GIVE_CODE)),
+        Markup.button.callback('Модерировать коды', createNextScene(types.PULL_REQUEST_CODE), !admin),
+        Markup.button.callback('Создать код', createNextScene(types.ADD_CODE), !admin),
+        Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.ENTRY)),
       ],{ columns: 2 }
     )
-    await send(ctx, fmt(bold('Меню TapSwap'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
+    await send(ctx, fmt(bold(ctx.i18n.t('tapswap.menu.header')),'\n\n',italic(ctx.i18n.t('tapswap.menu.body'))), markup)
     return ctx.wizard.next();
   },
   async (ctx, done) => {
     const sceneId = ctx.update?.callback_query?.data;
     
     if (sceneId) {
-      ctx.wizard.state.nextScene = sceneId;
+      const nextScene = getNextScene(sceneId)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
     } else {
-      await ctx.sendMessage('Вы вышли из меню TapSwap')
+      await ctx.sendMessage(ctx.i18n.t('tapswap.menu.exit'))
     }
     
     return done();
