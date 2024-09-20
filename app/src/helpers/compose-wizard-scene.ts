@@ -2,12 +2,16 @@ import { WizardScene } from 'telegraf/scenes';
 
 
 const unwrapCallback = async (ctx, nextScene = (ctx) => undefined) => {
-  const nextSceneId = await Promise.resolve(nextScene(ctx));
-  if (nextSceneId) {
-    ctx.scene.leave();
-    return ctx.scene.enter(nextSceneId, ctx.scene.state);
-  };
-  return ctx.scene.leave();
+  try {
+    const nextSceneId = await Promise.resolve(nextScene(ctx));
+    if (nextSceneId) {
+      ctx.scene.leave();
+      return ctx.scene.enter(nextSceneId, ctx.scene.state);
+    };
+    return ctx.scene.leave();
+  } catch (e) {
+    console.log(e)
+  }
 };
 
 /**

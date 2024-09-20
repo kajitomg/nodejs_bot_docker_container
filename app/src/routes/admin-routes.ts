@@ -1,6 +1,4 @@
 import { Composer, Scenes } from 'telegraf';
-import start from '../handlers/start';
-import { ScenesTypes } from '../scenes';
 
 export const adminUsers = [
   806145885,
@@ -9,21 +7,5 @@ export const adminUsers = [
 
 const adminBot = new Composer<Scenes.SceneContext>();
 
-
-adminBot.command('menu', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.menu.wizard.ENTRY)
-})
-
-adminBot.command('tapswap', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.tapSwap.wizard.ENTRY)
-})
-
-adminBot.command('xempire', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.xEmpire.wizard.ENTRY)
-})
-
-adminBot.command('blum', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.blum.wizard.ENTRY)
-})
 
 export default Composer.acl(adminUsers,adminBot);
