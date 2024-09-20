@@ -1,13 +1,15 @@
 import { MenuScenesTypes, MenuWizardScenes } from './menu';
 import { TapSwapScenesTypes, TapSwapWizardScenes } from './tap-swap';
 import { XEmpireScenesTypes, XEmpireWizardScenes } from './x-empire';
-import { BlumWizardScenes, BlumScenesTypes } from './blum';
+import { BlumScenesTypes, BlumWizardScenes } from './blum';
+import { CodeScenesTypes, CodeWizardScenes } from './code';
 
 export const WizardScenes = [
   ...MenuWizardScenes,
   ...TapSwapWizardScenes,
   ...XEmpireWizardScenes,
   ...BlumWizardScenes,
+  ...CodeWizardScenes,
 ]
 
 export const ScenesTypes = {
@@ -15,4 +17,5 @@ export const ScenesTypes = {
   tapSwap: TapSwapScenesTypes,
   xEmpire: XEmpireScenesTypes,
   blum: BlumScenesTypes,
+  code: CodeScenesTypes,
 }

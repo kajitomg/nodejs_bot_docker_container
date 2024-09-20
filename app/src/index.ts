@@ -9,7 +9,7 @@ import  TelegrafI18n  from 'telegraf-i18n';
 
 const i18n = new TelegrafI18n({
   defaultLanguage: 'ru',
-  directory: path.resolve(__dirname, 'locales'),
+  directory: path.resolve('src/locales'),
 });
 
 const bot = new Telegraf<Scenes.SceneContext>(process.env.API_KEY_BOT );

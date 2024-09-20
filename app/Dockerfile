@@ -18,7 +18,7 @@ WORKDIR /opt/server/
 COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY /*.json ./
-RUN npm i
+RUN npm i --legacy-peer-deps
 
 COPY /dist ./
 

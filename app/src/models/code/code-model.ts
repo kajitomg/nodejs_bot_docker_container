@@ -1,6 +1,7 @@
 import { CreationOptional, InferAttributes, InferCreationAttributes, Model, DataTypes } from "sequelize";
 import services from '../../services';
-import { CodeStatuses, Games } from '../index';
+import { Games } from '../game';
+import { CodeStatuses } from './index';
 
 const sequelize = services.db?.postgres?.sequelize
 
