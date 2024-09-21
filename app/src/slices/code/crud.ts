@@ -2,7 +2,8 @@ import { Op } from 'sequelize';
 import { ApiError } from '../../exceptions/api-error';
 import createSlice from '../../helpers/create-slice';
 import { getDateNow } from '../../helpers/get-date-now';
-import { codeModel, CodeStatuses } from '../../models';
+import { codeModel } from '../../models';
+import { CodeStatuses } from '../../models/code';
 import { ICode } from '../../models/code/code-model';
 
 type indentDataType = Pick<ICode, 'id'>

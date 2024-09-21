@@ -1,6 +1,6 @@
 import { ApiError } from '../exceptions/api-error';
 import controllerWrapper from '../helpers/controller-wrapper';
-import { CodeStatuses } from '../models';
+import { CodeStatuses } from '../models/code';
 import { ICode } from '../models/code/code-model';
 import { codeSlices } from '../slices/code';
 type indentDataType = Pick<ICode, 'id'>
@@ -81,7 +81,7 @@ export default {
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при обновлении кода`, error)
+      console.log(ApiError.BadRequest(`Ошибка при обновлении кода`, error))
     }
   },
   

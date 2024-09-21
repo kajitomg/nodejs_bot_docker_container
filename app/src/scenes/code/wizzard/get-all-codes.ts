@@ -107,7 +107,7 @@ export const createGetAllCodesScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const game = ctx.wizard.state.game
+    const game = ctx.wizard.state.options.game
     const callback_data = ctx.update?.callback_query?.data;
     
     try {
@@ -127,7 +127,7 @@ export const createGetAllCodesScene = composeWizardScene(
           ctx.wizard.state.nextScene = types.GET_ALL_CODES;
         })
       } else {
-        await ctx.sendMessage(`Вы вышли из меню ${game.name}`)
+        await ctx.sendMessage(`Вы вышли из меню кодов ${game.name}`)
       }
     } catch (e) {
       console.log(e)

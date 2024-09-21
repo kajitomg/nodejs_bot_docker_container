@@ -1,6 +1,7 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
+import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { ScenesTypes } from '../../index';
 
@@ -9,9 +10,9 @@ export const createEntryScene = composeWizardScene(
     ctx.scene.state = {}
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('TapSwap', ScenesTypes.tapSwap.wizard.ENTRY),
-        Markup.button.callback('XEmpire', ScenesTypes.xEmpire.wizard.ENTRY),
-        Markup.button.callback('Blum', ScenesTypes.blum.wizard.ENTRY),
+        Markup.button.callback('TapSwap', createNextScene(ScenesTypes.tapSwap.wizard.ENTRY)),
+        Markup.button.callback('XEmpire', createNextScene(ScenesTypes.xEmpire.wizard.ENTRY)),
+        Markup.button.callback('Blum', createNextScene(ScenesTypes.blum.wizard.ENTRY)),
       ],{ columns: 2 }
     )
 
@@ -22,7 +23,10 @@ export const createEntryScene = composeWizardScene(
     const sceneId = ctx.update?.callback_query?.data;
     
     if (sceneId) {
-      ctx.wizard.state.nextScene = sceneId;
+      const nextScene = getNextScene(sceneId)
+      if (nextScene) {
+        ctx.wizard.state.nextScene = nextScene;
+      }
     } else {
       await ctx.sendMessage(ctx.i18n.t('menu.exit'))
     }

@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { bold, fmt } from 'telegraf/format';
+import { bold, fmt, italic } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
@@ -22,7 +22,7 @@ export const createGiveCodeScene = composeWizardScene(
     const text = genMessage({
       header: bold(`Предложить код ${game.name}`),
       body: fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
-      ...(ctx.wizard.state.warning && {footer: fmt(`*${ctx.wizard.state.warning}*`)})
+      ...(ctx.wizard.state.warning && {footer: italic(`${ctx.wizard.state.warning}*`)})
     })
     
     await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
@@ -38,7 +38,7 @@ export const createGiveCodeScene = composeWizardScene(
       if (nextScene) {
         ctx.wizard.state.nextScene = nextScene;
       }
-      if (sceneId === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
+      if (nextScene === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
         ctx.wizard.state.nextScene = types.GIVE_CODE;
         ctx.wizard.state.warning = 'Заполните обязательные поля';
       }

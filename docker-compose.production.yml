@@ -17,7 +17,6 @@ services:
       - '3000'
     depends_on:
       - db
-    command: npm run start
 
   # Контейнер с базой данных
   db:
