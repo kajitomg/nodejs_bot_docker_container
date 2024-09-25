@@ -3,7 +3,7 @@ import start from '../handlers/start';
 import { ScenesTypes } from '../scenes';
 
 const userBot = new Composer<Scenes.SceneContext>();
-/*
+
 userBot.start(start)
 
 userBot.command('menu', async ctx => {
@@ -25,5 +25,5 @@ userBot.command('blum', async ctx => {
 userBot.on('message', (ctx) => {
   ctx.sendMessage('Неизвестная команда')
 })
-*/
+
 export default userBot;
