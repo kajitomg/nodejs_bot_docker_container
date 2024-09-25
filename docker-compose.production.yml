@@ -11,6 +11,7 @@ services:
       - ./app:/opt/server
       - ./static:/opt/static
       - /opt/server/node_modules/
+      - /opt/server/dist/
     env_file:
       - .env
     expose:

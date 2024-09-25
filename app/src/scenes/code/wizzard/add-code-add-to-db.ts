@@ -13,14 +13,14 @@ export const createAddCodeAddToDBScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад в меню', createNextScene(types.ADD_CODE)),
-        Markup.button.callback('Создать код', 'create-code'),
+        Markup.button.callback(ctx.i18n.t('code.addToDB.buttons.back'), createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code.addToDB.buttons.create'), 'create-code'),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(`Вы хотите добавить в базу данных ${game.name} код:`),
-      body: fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: bold(ctx.i18n.t('code.addToDB.header',{game: game.name})),
+      body: fmt(fmt(`- ${ctx.i18n.t('code.addToDB.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code.addToDB.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
@@ -47,7 +47,7 @@ export const createAddCodeAddToDBScene = composeWizardScene(
         ctx.wizard.state.nextScene = types.ADD_CODE_END_DIALOG;
       }
     } else {
-      await ctx.sendMessage(`Вы вышли из меню создания кода ${game.name}`)
+      await ctx.sendMessage(ctx.i18n.t('code.addToDB.exit',{ game: game.name }))
     }
     return done();
   },

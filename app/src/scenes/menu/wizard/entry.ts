@@ -21,7 +21,7 @@ export const createEntryScene = composeWizardScene(
   },
   async (ctx, done) => {
     const sceneId = ctx.update?.callback_query?.data;
-    
+
     if (sceneId) {
       const nextScene = getNextScene(sceneId)
       if (nextScene) {

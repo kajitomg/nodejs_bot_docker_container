@@ -12,16 +12,16 @@ export const createGiveCodeScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Изменить название', createNextScene(types.GIVE_CODE_NAME)),
-        Markup.button.callback('Изменить содержание', createNextScene(types.GIVE_CODE_CONTENT)),
-        Markup.button.callback('Отправить код', createNextScene(types.GIVE_CODE_ADD_TO_DB)),
-        Markup.button.callback('Назад в меню', createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code.give.buttons.name'), createNextScene(types.GIVE_CODE_NAME)),
+        Markup.button.callback(ctx.i18n.t('code.give.buttons.content'), createNextScene(types.GIVE_CODE_CONTENT)),
+        Markup.button.callback(ctx.i18n.t('code.give.buttons.create'), createNextScene(types.GIVE_CODE_ADD_TO_DB)),
+        Markup.button.callback(ctx.i18n.t('code.give.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(`Предложить код ${game.name}`),
-      body: fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: bold(ctx.i18n.t('code.give.header',{ game: game.name })),
+      body: fmt(fmt(`- ${ctx.i18n.t('code.give.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code.give.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
       ...(ctx.wizard.state.warning && {footer: italic(`${ctx.wizard.state.warning}*`)})
     })
     
@@ -40,10 +40,10 @@ export const createGiveCodeScene = composeWizardScene(
       }
       if (nextScene === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
         ctx.wizard.state.nextScene = types.GIVE_CODE;
-        ctx.wizard.state.warning = 'Заполните обязательные поля';
+        ctx.wizard.state.warning = ctx.i18n.t('code.give.warning');
       }
     } else {
-      await ctx.sendMessage(`Вы вышли из меню для предложений кода ${game.name}`)
+      await ctx.sendMessage(ctx.i18n.t('code.give.exit',{ game: game.name }))
     }
     return done();
   },

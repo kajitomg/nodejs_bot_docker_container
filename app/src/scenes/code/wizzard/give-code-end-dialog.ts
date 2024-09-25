@@ -16,14 +16,14 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     const game = ctx.wizard.state.options.game
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(`Вернуться в меню ${game.name}`, createNextScene(ctx.wizard.state.options.entry)),
-        Markup.button.callback('Предложить новый код', createNextScene(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code.giveEnd.buttons.back',{ game: game.name }), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code.giveEnd.buttons.create'), createNextScene(types.GIVE_CODE)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(variants[ctx.wizard.state.add_code_result]),
-      body: fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: bold(ctx.i18n.t(`code.giveEnd.header.${ctx.wizard.state.add_code_result}`)),
+      body: fmt(fmt(`- ${ctx.i18n.t('code.giveEnd.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code.giveEnd.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
@@ -44,7 +44,7 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
         ctx.wizard.state.nextScene = nextScene;
       }
     } else {
-      await ctx.sendMessage(`Вы вышли из меню для предложений кода ${game.name}`)
+      await ctx.sendMessage(ctx.i18n.t('code.giveEnd.exit',{ game: game.name }))
     }
     return done();
   },

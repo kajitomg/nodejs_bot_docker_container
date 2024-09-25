@@ -44,19 +44,19 @@ export const createPullRequestCodeScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Отклонить', 'reject'),
-        Markup.button.callback('Принять', 'accept'),
-        ctx.wizard.state.pull_request_code_pagination.prevPageButton('Предыдущий код'),
-        ctx.wizard.state.pull_request_code_pagination.nextPageButton('Следующий код'),
-        Markup.button.callback('Назад в меню', createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code.pull.buttons.reject'), 'reject'),
+        Markup.button.callback(ctx.i18n.t('code.pull.buttons.accept'), 'accept'),
+        ctx.wizard.state.pull_request_code_pagination.prevPageButton(ctx.i18n.t('code.pull.buttons.prev')),
+        ctx.wizard.state.pull_request_code_pagination.nextPageButton(ctx.i18n.t('code.pull.buttons.next')),
+        Markup.button.callback(ctx.i18n.t('code.pull.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(`Меню модерации кодов ${game.name}`),
+      header: bold(ctx.i18n.t('code.pull.header', { game: game.name })),
       body: code.items?.[0] ?
-        fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')) :
-        bold('Нет предложенных кодов')
+        fmt(fmt(`- ${ctx.i18n.t('code.pull.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code.pull.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')) :
+        bold(ctx.i18n.t('code.pull.emptyArray'))
       ,
     })
     
@@ -91,7 +91,7 @@ export const createPullRequestCodeScene = composeWizardScene(
       })
       
     } else {
-      await ctx.sendMessage(`Вы вышли из меню модерации кодов ${game.name}`)
+      await ctx.sendMessage(ctx.i18n.t('code.pull.exit', { game: game.name }))
     }
     return done();
   },

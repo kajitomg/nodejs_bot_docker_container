@@ -28,7 +28,7 @@ export const createPullRequestCodeHandlerScene = composeWizardScene(
     if (sceneId) {
       ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE;
     } else {
-      await ctx.sendMessage(`Вы вышли из меню модерации кодов ${game}`)
+      await ctx.sendMessage(ctx.i18n.t('code.pull.exit', { game: game.name }))
     }
     return done();
   },

@@ -16,10 +16,10 @@ export const createGetAllCodesScene = composeWizardScene(
   async (ctx) => {
     try {
       const game = ctx.wizard.state.options.game
-      
+
       ctx.wizard.state.all_codes_pagination = ctx.wizard.state.all_codes_pagination || new MarkupPagination(1, 1)
       ctx.wizard.state.all_codes_message_sample = ctx.wizard.state.all_codes_message_sample || new createMessageSample({
-        content_wait: fmt('Идет загрузка данных...'),
+        content_wait: fmt(ctx.i18n.t('code.getAll.loader')),
         data: {
           page: ctx.wizard.state.all_codes_pagination.page,
           max_pages: ctx.wizard.state.all_codes_pagination.maxPages,
@@ -34,12 +34,12 @@ export const createGetAllCodesScene = composeWizardScene(
               ctx.wizard.state.all_codes_pagination.prevPageButton(),
               Markup.button.callback(`${data?.page || '*'}/${data?.max_pages  || data?.page || '*'}(↻)`, 'force_update'),
               ctx.wizard.state.all_codes_pagination.nextPageButton(),
-              Markup.button.callback('Назад в меню', createNextScene(ctx.wizard.state.options.entry)),
+              Markup.button.callback(ctx.i18n.t('code.getAll.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
             ],{ columns: 3 }
           )
           
           const text = genMessage({
-            header: bold(`Список кодов ${game.name}:`),
+            header: bold(ctx.i18n.t('code.getAll.header',{ game: game.name })),
             ...(data.content && {body: data.content})
           })
           
@@ -77,10 +77,10 @@ export const createGetAllCodesScene = composeWizardScene(
           body: genMessage({
             //@ts-ignore
             body: createListMessage({ list: codes.items, convertFn: (key, i) => fmt( (ctx.wizard.state.all_codes_pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
-            footer: italic('Для копирования нажмите на код')
+            footer: italic(ctx.i18n.t('code.getAll.help'))
           }),
-          footer: bold('Коды: ',(ctx.wizard.state.all_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.all_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.all_codes_count) ,
-        }) : fmt('Коды не найдены')
+          footer: bold(`${ctx.i18n.t('code.getAll.paginationContent')} `,(ctx.wizard.state.all_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.all_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.all_codes_count) ,
+        }) : fmt(ctx.i18n.t('code.getAll.emptyArray'))
         
         ctx.wizard.state.all_codes_message_sample.data = {
           content: text,
@@ -127,7 +127,7 @@ export const createGetAllCodesScene = composeWizardScene(
           ctx.wizard.state.nextScene = types.GET_ALL_CODES;
         })
       } else {
-        await ctx.sendMessage(`Вы вышли из меню кодов ${game.name}`)
+        await ctx.sendMessage(ctx.i18n.t('code.getAll.exit',{ game: game.name }))
       }
     } catch (e) {
       console.log(e)

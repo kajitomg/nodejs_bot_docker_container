@@ -10,13 +10,13 @@ export const createGiveCodeNameScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад в меню', createNextScene(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code.giveName.buttons.back'), createNextScene(types.GIVE_CODE)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: fmt('Введите Название кода:'),
-      body: fmt(fmt(`- Название${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-')),
+      header: fmt(ctx.i18n.t('code.giveName.header')),
+      body: fmt(fmt(`- ${ctx.i18n.t('code.giveName.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-')),
     })
     
     const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })    //@ts-ignore

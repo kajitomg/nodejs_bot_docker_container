@@ -17,29 +17,29 @@ export const createSearchCodesScene = composeWizardScene(
     const game = ctx.wizard.state.options.game
     ctx.wizard.state.search_codes_pagination = ctx.wizard.state.search_codes_pagination || new MarkupPagination(1, 1)
     ctx.wizard.state.search_codes_message_sample = ctx.wizard.state.search_codes_message_sample || new createMessageSample({
-      content_wait: fmt('Идет загрузка данных...'),
+      content_wait: fmt(ctx.i18n.t('code.search.loader')),
       data: {
         page: ctx.wizard.state.search_codes_pagination.page,
-        max_page: ctx.wizard.state.search_codes_pagination.maxPages,
+        max_pages: ctx.wizard.state.search_codes_pagination.maxPages,
       },
       sample: (data?:{
         page?: number,
-        max_page?: number,
+        max_pages?: number,
         content?: FmtString
       }) => {
         const markup = Markup.inlineKeyboard(
           [
-            Markup.button.callback('   <<<', 'prev_page'),
-            Markup.button.callback(`${data?.page || '*'}/${data?.max_page || data?.page || '*'}(↻)`, 'force_update'),
-            Markup.button.callback('   >>>   ', 'next_page'),
-            Markup.button.callback('Назад в меню', createNextScene(ctx.wizard.state.options.entry)),
+            ctx.wizard.state.search_codes_pagination.prevPageButton(),
+            Markup.button.callback(`${data?.page || '*'}/${data?.max_pages || data?.page || '*'}(↻)`, 'force_update'),
+            ctx.wizard.state.search_codes_pagination.nextPageButton(),
+            Markup.button.callback(ctx.i18n.t('code.search.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
           ],{ columns: 3 }
         )
         
         const text = genMessage({
-          header: bold(`Поиск кодов ${game.name}:`),
+          header: bold(ctx.i18n.t('code.search.header', { game: game.name })),
           ...(data.content && {body: data.content}),
-          footer: italic('Введите название видео:')
+          footer: italic(ctx.i18n.t('code.search.footer'))
         })
         
         return {
@@ -79,15 +79,15 @@ export const createSearchCodesScene = composeWizardScene(
       
       const text = codes?.items?.length > 0 ? genMessage({
         body: genMessage({
-          ...(ctx.wizard.state.search_codes_search_query && { header: italic(`Коды по запросу: ${ctx.wizard.state.search_codes_search_query}` )}),
+          ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code.search.request', { codeName: ctx.wizard.state.search_codes_search_query}))}),
           //@ts-ignore
           body: createListMessage({ list: codes.items, convertFn: (key, i) => fmt( (ctx.wizard.state.search_codes_pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
-          footer: italic('Для копирования нажмите на код')
+          footer: italic(ctx.i18n.t('code.search.help'))
         }),
-        footer: bold('Коды: ',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.search_codes_count) ,
+        footer: bold(`${ctx.i18n.t('code.search.paginationContent')} `,(ctx.wizard.state.search_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.search_codes_count) ,
       }) : ctx.wizard.state.search_codes_search_query ? genMessage({
-        ...(ctx.wizard.state.search_codes_search_query && { header: italic(`Коды по запросу: ${ctx.wizard.state.search_codes_search_query}` )}),
-        body: italic('Нет соответствующих кодов')
+        ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code.search.request', { codeName: ctx.wizard.state.search_codes_search_query}))}),
+        body: italic(ctx.i18n.t('code.search.emptyArray'))
       }) : fmt('')
       
       ctx.wizard.state.search_codes_message_sample.data = {

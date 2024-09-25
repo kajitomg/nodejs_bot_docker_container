@@ -10,13 +10,13 @@ export const createAddCodeContentScene = composeWizardScene(
   async (ctx) => {
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад в меню', createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code.addContent.buttons.back'), createNextScene(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: fmt('Введите Содержание кода:'),
-      body: fmt(fmt(`- Содержание${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: fmt(ctx.i18n.t('code.addContent.header')),
+      body: fmt(fmt(`- ${ctx.i18n.t('code.addContent.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
