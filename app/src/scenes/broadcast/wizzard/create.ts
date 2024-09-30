@@ -46,14 +46,14 @@ export const createCreateBroadcastScene = composeWizardScene(
         }
       } else {
         ctx.wizard.state.broadcast = {
-          text: {
-            value: ctx.message.text,
-            entities: ctx.message.entities,
-          },
-          forward: {
-            chat: ctx.message.forward_from_chat.id,
-            message: ctx.message.forward_from_message_id
-          }
+          ...(ctx.message?.text && {text: {
+              value: ctx.message?.text,
+              entities: ctx.message?.entities,
+            }}),
+          ...(ctx.message?.forward_from_chat && {forward: {
+            chat: ctx.message?.forward_from_chat?.id,
+            message: ctx.message?.forward_from_message_id
+          }})
         }
         ctx.wizard.state.nextScene = types.GET;
       }
