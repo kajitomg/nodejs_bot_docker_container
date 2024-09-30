@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { ApiError } from '../../exceptions/api-error';
+import { HandlerError } from '../../exceptions/api-error';
 import createSlice from '../../helpers/create-slice';
 import { getDateNow } from '../../helpers/get-date-now';
 import { codeModel } from '../../models';
@@ -60,7 +60,7 @@ export const crud = {
         item
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при создании кода`, [e])
+      console.error(new HandlerError(400, `Ошибка при создании кода`, [e]))
     }
   }),
   
@@ -74,7 +74,7 @@ export const crud = {
         }
       )
       if (!item) {
-        throw ApiError.BadRequest(`Код с id ${data.id} не найден`)
+        console.error(new HandlerError(400, `Код с id ${data.id} не найден`))
       }
       
       return {
@@ -82,7 +82,7 @@ export const crud = {
         item
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при получении кода`, [e])
+      console.error(new HandlerError(400, `Ошибка при получении кода`, [e]))
     }
   }),
   
@@ -106,7 +106,7 @@ export const crud = {
         }
       )
       if (!item) {
-        throw ApiError.BadRequest(`Не удалось обновить код с id ${id}`)
+        console.error(new HandlerError(400, `Не удалось обновить код с id ${id}`))
       }
       
       return {
@@ -114,7 +114,7 @@ export const crud = {
         item
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при обновлении кода`, [e])
+      console.error(new HandlerError(400, `Ошибка при обновлении кода`, [e]))
     }
   }),
   
@@ -128,14 +128,14 @@ export const crud = {
         }
       )
       if (!item) {
-        throw ApiError.BadRequest(`Не удалось удалить код с id ${data.id}`)
+        console.error(new HandlerError(400, `Не удалось удалить код с id ${data.id}`))
       }
       
       return {
         result: 1
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при удалении кода`, [e])
+      console.error(new HandlerError(400, `Ошибка при удалении кода`, [e]))
     }
   }),
   
@@ -167,7 +167,7 @@ export const crud = {
         count: items.count
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при получении кода`, [e])
+      console.error(new HandlerError(400, `Ошибка при получении кода`, [e]))
     }
   }),
   
@@ -265,7 +265,7 @@ export const crud = {
         count: count
       }
     } catch (e) {
-      throw ApiError.BadRequest(`Ошибка при получении числа кодов`, [e])
+      console.error(new HandlerError(400, `Ошибка при получении числа кодов`, [e]))
     }
   })
 }

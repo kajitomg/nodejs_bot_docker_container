@@ -1,9 +1,11 @@
 import { UserSlices } from './user';
 import { codeSlices } from './code';
+import { mandatoryChannelSlices } from './mandatory-channel';
 
 export class Slices {
   private _user: UserSlices
   private _code: typeof codeSlices
+  private _mandatoryChannel: typeof mandatoryChannelSlices
   
   constructor() {}
   
@@ -19,6 +21,13 @@ export class Slices {
       this._code = codeSlices;
     }
     return this._code;
+  }
+  
+  get mandatoryChannel() {
+    if (!this._mandatoryChannel) {
+      this._mandatoryChannel = mandatoryChannelSlices;
+    }
+    return this._mandatoryChannel;
   }
 }
 

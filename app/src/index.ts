@@ -4,8 +4,8 @@ import adminRoutes from './routes/admin-routes';
 import userRoutes from './routes/user-routes';
 import { WizardScenes } from './scenes';
 import services from './services';
-import models from './models';
-import  TelegrafI18n  from 'telegraf-i18n';
+import * as models from './models';
+import  TelegrafI18n from 'telegraf-i18n';
 
 const i18n = new TelegrafI18n({
   defaultLanguage: 'ru',

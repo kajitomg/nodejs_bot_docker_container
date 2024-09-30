@@ -5,13 +5,30 @@ menu:
 
   exit: Вы вышли из сцены меню
 
-tapswap:
-  menu:
-    header: Меню TapSwap
+changeLanguage:
+  header: Меню Выбора языка
 
-    body: 'Выберите интересующее вас действие:'
+  body: 'Выберите язык:'
 
-    exit: Вы вышли из сцены меню
+  exit: Вы вышли из меню Выбора языка
+
+  buttons:
+    back: Перейти в меню
+
+game:
+  header: Меню ${game}
+
+  body: 'Выберите интересующее вас действие:'
+
+  exit: Вы вышли из сцены меню ${game}
+
+  buttons:
+    getAll: Получить все коды
+    search: Найти код по названию
+    pull: Предложить код
+    moderate: Модерировать коды
+    create: Создать код
+    back: Назад в меню
 code:
   add:
     header: Сцена создания кода ${game}

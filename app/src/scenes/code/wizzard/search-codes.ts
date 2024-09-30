@@ -8,6 +8,8 @@ import MarkupPagination from '../../../helpers/markup-pagination';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses } from '../../../models/code';
+import { Languages } from '../../../models/user/user-model';
+import Slices from '../../../slices';
 import types from './types';
 
 const limit = 25
@@ -15,6 +17,24 @@ const limit = 25
 export const createSearchCodesScene = composeWizardScene(
   async (ctx) => {
     const game = ctx.wizard.state.options.game
+    
+    const chat_id = ctx.chat.id
+    let language = ctx.scene.state?.options?.language
+    
+    if(!language) {
+      const user = await Slices.user.crud.get({ chat_id })
+      language = Languages?.[user.item?.language] || 'ru'
+    }
+    
+    if (ctx.wizard.state.options) {
+      ctx.wizard.state.options.language = language
+    } else {
+      ctx.wizard.state.options = {
+        language
+      }
+    }
+    ctx.i18n.locale(language)
+    
     ctx.wizard.state.search_codes_pagination = ctx.wizard.state.search_codes_pagination || new MarkupPagination(1, 1)
     ctx.wizard.state.search_codes_message_sample = ctx.wizard.state.search_codes_message_sample || new createMessageSample({
       content_wait: fmt(ctx.i18n.t('code.search.loader')),

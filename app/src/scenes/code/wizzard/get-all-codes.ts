@@ -1,6 +1,7 @@
 import { Markup } from 'telegraf';
 import { bold, code, fmt, FmtString, italic } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
+import { HandlerError } from '../../../exceptions/api-error';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import createListMessage from '../../../helpers/create-list-message';
 import { createMessageSample, genMessage } from '../../../helpers/create-message-sample';
@@ -8,17 +9,40 @@ import MarkupPagination from '../../../helpers/markup-pagination';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses } from '../../../models/code';
+import { Languages } from '../../../models/user/user-model';
+import Slices from '../../../slices';
 import types from './types';
 
 const limit = 25
 
 export const createGetAllCodesScene = composeWizardScene(
-  async (ctx) => {
+  async (ctx, done) => {
+    const game = ctx.wizard.state?.options?.game
+    
+    const chat_id = ctx.chat.id
+    let language = ctx.scene.state?.options?.language
+    
+    if(!language) {
+      const user = await Slices.user.crud.get({ chat_id })
+      language = Languages?.[user.item?.language] || 'ru'
+    }
+    
+    if (ctx.wizard.state.options) {
+      ctx.wizard.state.options.language = language
+    } else {
+      ctx.wizard.state.options = {
+        language
+      }
+    }
+    ctx.i18n.locale(language)
+    
+    if (!game) {
+      console.error(new HandlerError(400, 'Ошибка: отсутствует поле game'))
+      return done();
+    }
     try {
-      const game = ctx.wizard.state.options.game
-
-      ctx.wizard.state.all_codes_pagination = ctx.wizard.state.all_codes_pagination || new MarkupPagination(1, 1)
-      ctx.wizard.state.all_codes_message_sample = ctx.wizard.state.all_codes_message_sample || new createMessageSample({
+      ctx.wizard.state.all_codes_pagination = ctx.wizard.state?.all_codes_pagination || new MarkupPagination(1, 1)
+      ctx.wizard.state.all_codes_message_sample = ctx.wizard.state?.all_codes_message_sample || new createMessageSample({
         content_wait: fmt(ctx.i18n.t('code.getAll.loader')),
         data: {
           page: ctx.wizard.state.all_codes_pagination.page,
@@ -101,13 +125,17 @@ export const createGetAllCodesScene = composeWizardScene(
       }
       
     } catch (e) {
-      console.log(e)
+      console.error(new HandlerError(400, 'Ошибка: Получение кодов', e))
     }
     
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const game = ctx.wizard.state.options.game
+    const game = ctx.wizard.state?.options?.game
+    if (!game) {
+      console.error(new HandlerError(400, 'Ошибка: отсутствует поле game'))
+      return done();
+    }
     const callback_data = ctx.update?.callback_query?.data;
     
     try {
@@ -130,7 +158,7 @@ export const createGetAllCodesScene = composeWizardScene(
         await ctx.sendMessage(ctx.i18n.t('code.getAll.exit',{ game: game.name }))
       }
     } catch (e) {
-      console.log(e)
+      console.error(new HandlerError(400, 'Ошибка: Получение кодов', e))
     }
     
     return done();

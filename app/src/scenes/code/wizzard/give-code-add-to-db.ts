@@ -5,11 +5,31 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { Languages } from '../../../models/user/user-model';
+import Slices from '../../../slices';
 import types from './types';
 
 export const createGiveCodeAddToDBScene = composeWizardScene(
   async (ctx) => {
     const game = ctx.wizard.state.options.game
+    
+    const chat_id = ctx.chat.id
+    let language = ctx.scene.state?.options?.language
+    
+    if(!language) {
+      const user = await Slices.user.crud.get({ chat_id })
+      language = Languages?.[user.item?.language] || 'ru'
+    }
+    
+    if (ctx.wizard.state.options) {
+      ctx.wizard.state.options.language = language
+    } else {
+      ctx.wizard.state.options = {
+        language
+      }
+    }
+    ctx.i18n.locale(language)
+    
     const markup = Markup.inlineKeyboard(
       [
         Markup.button.callback(ctx.i18n.t('code.giveToDB.buttons.back'), createNextScene(types.GIVE_CODE)),

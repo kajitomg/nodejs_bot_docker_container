@@ -1,12 +1,10 @@
 import { userModel } from './user'
 import { codeModel } from './code'
+import { mandatoryChannelModel } from './mandatory-channel'
+
 
 export {
   userModel,
-  codeModel
-}
-
-export default {
-  userModel,
-  codeModel
+  codeModel,
+  mandatoryChannelModel
 }

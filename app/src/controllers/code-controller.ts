@@ -1,4 +1,4 @@
-import { ApiError } from '../exceptions/api-error';
+import { HandlerError } from '../exceptions/api-error';
 import controllerWrapper from '../helpers/controller-wrapper';
 import { CodeStatuses } from '../models/code';
 import { ICode } from '../models/code/code-model';
@@ -34,12 +34,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при создании кода`, error)
+        (error) => new HandlerError(400, `Ошибка при создании кода`, error)
       )
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при создании кода`, error)
+      console.error(new HandlerError(400, `Ошибка при создании кода`, error))
     }
   },
   
@@ -57,12 +57,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при предложении кода`, error)
+        (error) => new HandlerError(400, `Ошибка при предложении кода`, error)
       )
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при предложении кода`, error)
+      console.error(new HandlerError(400, `Ошибка при предложении кода`, error))
     }
   },
   
@@ -76,12 +76,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при обновлении кода`, error)
+        (error) => new HandlerError(400, `Ошибка при обновлении кода`, error)
       )
       
       return code
     } catch (error) {
-      console.log(ApiError.BadRequest(`Ошибка при обновлении кода`, error))
+      console.error(new HandlerError(400, `Ошибка при обновлении кода`, error))
     }
   },
   
@@ -95,12 +95,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при получении кода`, error)
+        (error) => new HandlerError(400, `Ошибка при получении кода`, error)
       )
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при получении кода`, error)
+      console.error(new HandlerError(400, `Ошибка при получении кода`, error))
     }
   },
   
@@ -119,12 +119,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при получении кодов`, error)
+        (error) => new HandlerError(400, `Ошибка при получении кодов`, error)
       )
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при получении кодов`, error)
+      console.error(new HandlerError(400, `Ошибка при получении кодов`, error))
     }
   },
   
@@ -141,12 +141,12 @@ export default {
             options: { transaction }
           })
         },
-        (error) => ApiError.BadRequest(`Ошибка при получении числа кодов`, error)
+        (error) => new HandlerError(400, `Ошибка при получении числа кодов`, error)
       )
       
       return code
     } catch (error) {
-      throw ApiError.BadRequest(`Ошибка при получении числа кодов`, error)
+      console.error(new HandlerError(400, `Ошибка при получении числа кодов`, error))
     }
   }
   

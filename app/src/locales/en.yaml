@@ -1,124 +1,141 @@
 menu:
-  header: Меню
+  header: Menu
 
-  body: 'Выберите интересующее вас действие:'
+  body: 'Select the action:'
 
-  exit: Вы вышли из сцены меню
+  exit: You have exited the menu scene
 
-tapswap:
-  menu:
-    header: Меню TapSwap
+changeLanguage:
+  header: Language Selection Menu
 
-    body: 'Выберите интересующее вас действие:'
+  body: 'Select a language:'
 
-    exit: Вы вышли из сцены меню
+  exit: You have left the Language Selection menu
+
+  buttons:
+    back: Go to the menu
+
+game:
+  header: ${game} Menu
+
+  body: 'Select the action:'
+
+  exit: You have exited the ${game} menu scene
+
+  buttons:
+    getAll: Get all codes
+    search: Find the code by name
+    pull: Suggest a code
+    moderate: Moderate codes
+    create: Create a code
+    back: Back to the menu
 code:
   add:
-    header: Сцена создания кода ${game}
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню создания кода ${game}
-    warning: Заполните обязательные поля
+    header: ${game} code creation scene
+    name: Name
+    content: Content
+    exit: You have exited the ${game} code creation menu
+    warning: Fill in the required fields
     buttons:
-      name: Изменить название
-      content: Изменить содержание
-      create: Создать код
-      back: Назад в меню
+      name: Change the name
+      content: Change the content
+      create: Create a code
+      back: Back to the menu
   addToDB:
-    header: 'Вы хотите добавить в базу данных ${game} код:'
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню создания кода ${game}
+    header: 'Do you want to add the ${game} code to the database:'
+    name: Name
+    content: Content
+    exit: You have exited the ${game} code creation menu
     buttons:
-      create: Создать код
-      back: Назад в меню
+      create: Create a code
+      back: Back to the menu
   addName:
-    header: 'Введите Название кода:'
-    name: Название
+    header: 'Enter the Code name:'
+    name: Name
     buttons:
-      back: Назад в меню
+      back: Back to the menu
   addContent:
-    header: 'Введите Содержание кода:'
-    content: Содержание
+    header: 'Enter the contents of the code:'
+    content: Content
     buttons:
-      back: Назад в меню
+      back: Back to the menu
   addEnd:
     header:
-      - Произошла ошибка при добавлении кода!
-      - Код успешно добавлен!
-    name: Изменить название
-    content: Изменить содержание
-    exit: Вы вышли из меню создания кода ${game}
+      - An error occurred while adding the code!
+      - The code has been successfully added!
+    name: Change the name
+    content: Change the content
+    exit: You have exited the ${game} code creation menu
     buttons:
-      back: Вернуться в меню ${game}
-      create: Создать новый код
+      back: Go back to the ${game} menu
+      create: Create a new code
   getAll:
-    header: 'Список кодов ${game}:'
-    help: Для копирования нажмите на код
-    paginationContent: 'Коды:'
-    emptyArray: Коды не найдены
-    loader: Идет загрузка данных...
-    exit: Вы вышли из меню кодов ${game}
+    header: 'List of ${game} codes:'
+    help: To copy, click on the code
+    paginationContent: 'Codes:'
+    emptyArray: No codes found
+    loader: Data is being uploaded...
+    exit: You have exited the ${game} codes menu
     buttons:
-      back: Назад в меню
+      back: Back to the menu
   give:
-    header: Предложить код ${game}
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню для предложений кода ${game}
-    warning: Заполните обязательные поля
+    header: Suggest a ${game} code
+    name: Name
+    content: Content
+    exit: You have left the menu for ${game} code suggestions
+    warning: Fill in the required fields
     buttons:
-      name: Изменить название
-      content: Изменить содержание
-      create: Отправить код
-      back: Назад в меню
+      name: Change the name
+      content: Change the content
+      create: Send the code
+      back: Back to the menu
   giveToDB:
-    header: 'Вы хотите отправить код ${game} на модерацию:'
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню для предложений кода ${game}
+    header: 'Do you want to submit the ${game} code for moderation:'
+    name: Name
+    content: Content
+    exit: You have left the menu for ${game} code suggestions
     buttons:
-      create: Предложить код
-      back: Назад в меню
+      create: Suggest a code
+      back: Back to the menu
   giveName:
-    header: 'Введите Название кода:'
-    name: Название
+    header: 'Enter the Code name:'
+    name: Name
     buttons:
-      back: Назад в меню
+      back: Back to the menu
   giveContent:
-    header: 'Введите Содержание кода:'
-    content: Содержание
+    header: 'Enter the Content name:'
+    content: Content
     buttons:
-      back: Назад в меню
+      back: Back to the menu
   giveEnd:
     header:
-      - Произошла ошибка при отправке кода!
-      - Код успешно отправлен на модерацию!
-    name: Изменить название
-    content: Изменить содержание
-    exit: Вы вышли из меню для предложений кода ${game}
+      - An error occurred while sending the code!
+      - The code has been successfully submitted for moderation!
+    name: Change the name
+    content: Change the content
+    exit: You have left the menu for ${game} code suggestions
     buttons:
-      back: Вернуться в меню ${game}
-      create: Предложить новый код
+      back: Go back to the ${game} menu
+      create: Suggest a new code
   pull:
-    header: Меню модерации кодов ${game}
-    emptyArray: Нет предложенных кодов
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню модерации кодов ${game}
+    header: ${game} Code Moderation menu
+    emptyArray: There are no suggested codes
+    name: Name
+    content: Content
+    exit: You have left the ${game} code moderation menu
     buttons:
-      back: Назад в меню
-      accept: Принять
-      reject: Отклонить
-      next: Следующий код
-      prev: Предыдущий код
+      back: Back to the menu
+      accept: Accept
+      reject: Reject
+      next: Next code
+      prev: Previous code
   search:
-    header: 'Поиск кодов ${game}:'
-    footer: 'Введите название видео:'
-    request: 'Коды по запросу: ${codeName}'
-    help: Для копирования нажмите на код
-    paginationContent: 'Коды:'
-    emptyArray: Нет соответствующих кодов
-    loader: Идет загрузка данных...
+    header: 'Search for ${game} codes:'
+    footer: 'Enter the name of the video:'
+    request: 'Codes on request: ${codeName}'
+    help: To copy, click on the code
+    paginationContent: 'Codes:'
+    emptyArray: There are no corresponding codes
+    loader: Data is being uploaded...
     buttons:
-      back: Вернуться в меню
+      back: Back to the menu

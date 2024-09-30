@@ -30,6 +30,22 @@ export class UserCrudSlices {
     }
   }
   
+  public async gets() {
+    const users = await userModel.findAll()
+    
+    if (!users) {
+      console.log(`Ошибка при получении пользователей`)
+      return {
+        result: 0
+      }
+    }
+    
+    return {
+      list: users,
+      result: 1
+    }
+  }
+  
   public async get(data:{ chat_id:number }) {
     const user = await userModel.findOne({ where: data })
     

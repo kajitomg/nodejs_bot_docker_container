@@ -1,6 +1,7 @@
 import { Context } from 'telegraf';
 import { FmtString } from 'telegraf/format';
 import { ExtraEditMessageText, ExtraReplyMessage } from 'telegraf/typings/telegram-types';
+import { HandlerError } from '../exceptions/api-error';
 
 export default async (ctx:Context, text:string | FmtString<any>, extra?: ExtraEditMessageText) => {
   try {
@@ -10,7 +11,7 @@ export default async (ctx:Context, text:string | FmtString<any>, extra?: ExtraEd
       await ctx.answerCbQuery();
       return await ctx.editMessageText(text, extra);
     }
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(new HandlerError(400, 'Ошибка: Отправка сообщения', e))
   }
 };

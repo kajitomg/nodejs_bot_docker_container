@@ -7,6 +7,8 @@ import MarkupPagination from '../../../helpers/markup-pagination';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses } from '../../../models/code';
+import { Languages } from '../../../models/user/user-model';
+import Slices from '../../../slices';
 import types from './types';
 
 const limit = 1
@@ -14,6 +16,24 @@ const limit = 1
 export const createPullRequestCodeScene = composeWizardScene(
   async (ctx) => {
     const game = ctx.wizard.state.options.game
+    
+    const chat_id = ctx.chat.id
+    let language = ctx.scene.state?.options?.language
+    
+    if(!language) {
+      const user = await Slices.user.crud.get({ chat_id })
+      language = Languages?.[user.item?.language] || 'ru'
+    }
+    
+    if (ctx.wizard.state.options) {
+      ctx.wizard.state.options.language = language
+    } else {
+      ctx.wizard.state.options = {
+        language
+      }
+    }
+    ctx.i18n.locale(language)
+    
     ctx.wizard.state.pull_request_code_pagination = ctx.wizard.state.pull_request_code_pagination || new MarkupPagination(1, 1)
     
     let code = await codeController.getCodes({

@@ -1,4 +1,5 @@
 import { WizardScene } from 'telegraf/scenes';
+import { HandlerError } from '../exceptions/api-error';
 
 
 const unwrapCallback = async (ctx, nextScene = (ctx) => undefined) => {
@@ -10,7 +11,7 @@ const unwrapCallback = async (ctx, nextScene = (ctx) => undefined) => {
     };
     return ctx.scene.leave();
   } catch (e) {
-    console.log(e)
+    console.error(new HandlerError(400, 'Ошибка: завершение сцены', e))
   }
 };
 
@@ -45,10 +46,10 @@ export const composeWizardScene = (...advancedSteps) => (
           
           /** ignore user action if it is neither message, nor callbackQuery */
           if (!ctx.message && !ctx.callbackQuery) return undefined;
-
+          
           return stepFn(ctx, () => unwrapCallback(ctx, nextScene), next);
         } catch (e) {
-          console.log(e)
+          console.error(new HandlerError(400, 'Ошибка поиска сцены', e))
         }
       }),
     );
