@@ -11,8 +11,10 @@ create_code_new: &create_code_new Создать новый код
 back: &back Назад
 back_to: &back_to Вернуться в меню «${menu_name}»
 loader: &loader Идет загрузка данных...
+unknown_command: Неизвестная команда!
 
 change: &change Изменить «${value}»
+
 
 start:
   data:

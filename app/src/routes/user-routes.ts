@@ -1,7 +1,9 @@
 import { Composer, Scenes } from 'telegraf';
 import { HandlerError } from '../exceptions/api-error';
 import start from '../handlers/start';
+import { Languages } from '../models/user/user-model';
 import { ScenesTypes } from '../scenes';
+import Slices from '../slices';
 
 const userBot = new Composer<Scenes.SceneContext>();
 
@@ -37,9 +39,15 @@ userBot.command('blum', async ctx => {
   return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 
-userBot.on('message', (ctx) => {
+userBot.on('message', async (ctx) => {
+  const chat_id = ctx.chat.id
   try {
-    ctx.sendMessage('Неизвестная команда')
+    const user = (await Slices.user.crud.get({ chat_id }))
+    const language = Languages?.[user.item?.language] || 'ru'
+    //@ts-ignore
+    ctx.i18n.locale(language)
+    //@ts-ignore
+    ctx.sendMessage(ctx.i18n.t('unknown_command'))
   } catch (error) {
     console.error(new HandlerError(400, `Ошибка: Сцена сообщения`, error))
   }
