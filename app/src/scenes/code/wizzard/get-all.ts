@@ -43,7 +43,7 @@ export const createGetAllCodesScene = composeWizardScene(
     try {
       ctx.wizard.state.all_codes_pagination = ctx.wizard.state?.all_codes_pagination || new MarkupPagination(1, 1)
       ctx.wizard.state.all_codes_message_sample = ctx.wizard.state?.all_codes_message_sample || new createMessageSample({
-        content_wait: fmt(ctx.i18n.t('code.getAll.loader')),
+        content_wait: fmt(ctx.i18n.t('code_get_all.data.loader')),
         data: {
           page: ctx.wizard.state.all_codes_pagination.page,
           max_pages: ctx.wizard.state.all_codes_pagination.maxPages,
@@ -58,12 +58,12 @@ export const createGetAllCodesScene = composeWizardScene(
               ctx.wizard.state.all_codes_pagination.prevPageButton(),
               Markup.button.callback(`${data?.page || '*'}/${data?.max_pages  || data?.page || '*'}(↻)`, 'force_update'),
               ctx.wizard.state.all_codes_pagination.nextPageButton(),
-              Markup.button.callback(ctx.i18n.t('code.getAll.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+              Markup.button.callback(ctx.i18n.t('code_get_all.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
             ],{ columns: 3 }
           )
           
           const text = genMessage({
-            header: bold(ctx.i18n.t('code.getAll.header',{ game: game.name })),
+            header: bold(ctx.i18n.t('code_get_all.name',{ game_name: game.name })),
             ...(data.content && {body: data.content})
           })
           
@@ -101,10 +101,10 @@ export const createGetAllCodesScene = composeWizardScene(
           body: genMessage({
             //@ts-ignore
             body: createListMessage({ list: codes.items, convertFn: (key, i) => fmt( (ctx.wizard.state.all_codes_pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
-            footer: italic(ctx.i18n.t('code.getAll.help'))
+            footer: italic(ctx.i18n.t('code_get_all.data.warning_to_copy_click_on_code'))
           }),
-          footer: bold(`${ctx.i18n.t('code.getAll.paginationContent')} `,(ctx.wizard.state.all_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.all_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.all_codes_count) ,
-        }) : fmt(ctx.i18n.t('code.getAll.emptyArray'))
+          footer: bold(`${ctx.i18n.t('code_get_all.data.codes_pagination')} `,(ctx.wizard.state.all_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.all_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.all_codes_count) ,
+        }) : fmt(ctx.i18n.t('code_get_all.data.warning_codes_not_found'))
         
         ctx.wizard.state.all_codes_message_sample.data = {
           content: text,
@@ -136,6 +136,9 @@ export const createGetAllCodesScene = composeWizardScene(
       console.error(new HandlerError(400, 'Ошибка: отсутствует поле game'))
       return done();
     }
+    
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
+    
     const callback_data = ctx.update?.callback_query?.data;
     
     try {
@@ -155,7 +158,7 @@ export const createGetAllCodesScene = composeWizardScene(
           ctx.wizard.state.nextScene = types.GET_ALL_CODES;
         })
       } else {
-        await ctx.sendMessage(ctx.i18n.t('code.getAll.exit',{ game: game.name }))
+        await ctx.sendMessage(ctx.i18n.t('code_get_all.exit',{ menu_name: ctx.i18n.t('code_get_all.name',{ game_name: game.name }) }))
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Получение кодов', e))

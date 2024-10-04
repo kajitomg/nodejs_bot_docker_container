@@ -37,7 +37,7 @@ export const createSearchCodesScene = composeWizardScene(
     
     ctx.wizard.state.search_codes_pagination = ctx.wizard.state.search_codes_pagination || new MarkupPagination(1, 1)
     ctx.wizard.state.search_codes_message_sample = ctx.wizard.state.search_codes_message_sample || new createMessageSample({
-      content_wait: fmt(ctx.i18n.t('code.search.loader')),
+      content_wait: fmt(ctx.i18n.t('code_search.data.loader')),
       data: {
         page: ctx.wizard.state.search_codes_pagination.page,
         max_pages: ctx.wizard.state.search_codes_pagination.maxPages,
@@ -52,14 +52,14 @@ export const createSearchCodesScene = composeWizardScene(
             ctx.wizard.state.search_codes_pagination.prevPageButton(),
             Markup.button.callback(`${data?.page || '*'}/${data?.max_pages || data?.page || '*'}(↻)`, 'force_update'),
             ctx.wizard.state.search_codes_pagination.nextPageButton(),
-            Markup.button.callback(ctx.i18n.t('code.search.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+            Markup.button.callback(ctx.i18n.t('code_search.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
           ],{ columns: 3 }
         )
         
         const text = genMessage({
-          header: bold(ctx.i18n.t('code.search.header', { game: game.name })),
+          header: bold(ctx.i18n.t('code_search.name',{ game_name: game.name })),
           ...(data.content && {body: data.content}),
-          footer: italic(ctx.i18n.t('code.search.footer'))
+          footer: italic(ctx.i18n.t('code_search.data.warning_fill_video_name'))
         })
         
         return {
@@ -99,15 +99,15 @@ export const createSearchCodesScene = composeWizardScene(
       
       const text = codes?.items?.length > 0 ? genMessage({
         body: genMessage({
-          ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code.search.request', { codeName: ctx.wizard.state.search_codes_search_query}))}),
+          ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.wizard.state.search_codes_search_query}))}),
           //@ts-ignore
           body: createListMessage({ list: codes.items, convertFn: (key, i) => fmt( (ctx.wizard.state.search_codes_pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
-          footer: italic(ctx.i18n.t('code.search.help'))
+          footer: italic(ctx.i18n.t('code_search.data.warning_to_copy_click_on_code'))
         }),
-        footer: bold(`${ctx.i18n.t('code.search.paginationContent')} `,(ctx.wizard.state.search_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.search_codes_count) ,
+        footer: bold(`${ctx.i18n.t('code_search.data.codes_pagination')} `,(ctx.wizard.state.search_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.search_codes_count) ,
       }) : ctx.wizard.state.search_codes_search_query ? genMessage({
-        ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code.search.request', { codeName: ctx.wizard.state.search_codes_search_query}))}),
-        body: italic(ctx.i18n.t('code.search.emptyArray'))
+        ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.wizard.state.search_codes_search_query}))}),
+        body: italic(ctx.i18n.t('code_search.data.warning_codes_not_found'))
       }) : fmt('')
       
       ctx.wizard.state.search_codes_message_sample.data = {
@@ -118,7 +118,7 @@ export const createSearchCodesScene = composeWizardScene(
       ctx.wizard.state.search_codes_message_sample.is_loading = false
       
       //@ts-ignore
-      await ctx.telegram.editMessageText(ctx.chat.id, message.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup})
+      await ctx.telegram.editMessageText(ctx.chat.id, message?.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup})
       
     }
     if (ctx.wizard.state.search_codes_force_update) {
@@ -127,7 +127,7 @@ export const createSearchCodesScene = composeWizardScene(
     if (ctx.wizard.state.search_codes_message_sample.is_loading) {
       ctx.wizard.state.search_codes_message_sample.is_loading = false
       //@ts-ignore
-      await ctx.telegram.editMessageText(ctx.chat.id, message.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup })
+      await ctx.telegram.editMessageText(ctx.chat.id, message?.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup })
     }
     ctx.wizard.state.need_update = false
     
@@ -137,6 +137,8 @@ export const createSearchCodesScene = composeWizardScene(
     const chatId = ctx.chat?.id;
     const callback_data = ctx.update?.callback_query?.data;
     const messageText = ctx.message?.text;
+    
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined, undefined)
     

@@ -5,7 +5,7 @@ import { XEmpireScenesTypes, XEmpireWizardScenes } from './x-empire';
 import { BlumScenesTypes, BlumWizardScenes } from './blum';
 import { CodeScenesTypes, CodeWizardScenes } from './code';
 import { LanguageScenesTypes, LanguageWizardScenes } from './language';
-import { MandatoryChannelScenesTypes, MandatoryChannelWizardScenes } from './mandatory-channel';
+import { MandatorySubscriptionScenesTypes, MandatorySubscriptionWizardScenes } from './mandatory-subscription';
 
 export const WizardScenes = [
   ...MenuWizardScenes,
@@ -14,7 +14,7 @@ export const WizardScenes = [
   ...BlumWizardScenes,
   ...CodeWizardScenes,
   ...LanguageWizardScenes,
-  ...MandatoryChannelWizardScenes,
+  ...MandatorySubscriptionWizardScenes,
   ...BroadcastWizardScenes,
 ]
 
@@ -25,6 +25,6 @@ export const ScenesTypes = {
   blum: BlumScenesTypes,
   code: CodeScenesTypes,
   language: LanguageScenesTypes,
-  mandatoryChannel: MandatoryChannelScenesTypes,
+  mandatorySubscription: MandatorySubscriptionScenesTypes,
   broadcast: BroadcastScenesTypes,
 }

@@ -1,5 +1,6 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import mandatoryChannelController from '../../../controllers/mandatory-channel-controller';
 import { HandlerError } from '../../../exceptions/api-error';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
@@ -7,7 +8,7 @@ import send from '../../../helpers/send';
 import { ScenesTypes } from '../../index';
 import types from './types';
 
-export const createCreateMandatoryChannelDescriptionScene = composeWizardScene(
+export const createCreateMandatoryChannelNameScene = composeWizardScene(
   async (ctx) => {
     try {
       
@@ -16,11 +17,13 @@ export const createCreateMandatoryChannelDescriptionScene = composeWizardScene(
           Markup.button.callback('Назад в меню', createNextScene(types.CREATE)),
         ],{ columns: 2 }
       )
-      await send(ctx, fmt(
+      const message = await send(ctx, fmt(
         bold('Меню Создание канала ОП'),'\n\n',
-        italic(`Описание: ${ctx.wizard.state.create_mandatory_channel.description || '-'}`),'\n\n',
-        italic('Введите описание канала:')
+        italic(`Название${ctx.wizard.state?.create_mandatory_channel?.name ? '' : '*'}: ${ctx.wizard.state.create_mandatory_channel.name || '-'}`),'\n\n',
+        italic('Введите название канала:')
       ), markup)
+      //@ts-ignore
+      ctx.wizard.state.delete_message_id = message?.message_id
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Создание канала ОП', e))
     }
@@ -39,16 +42,11 @@ export const createCreateMandatoryChannelDescriptionScene = composeWizardScene(
           ctx.wizard.state.nextScene = nextScene;
         }
       } else {
-        if (!ctx.wizard.state.create_mandatory_channel.id) {
-          ctx.wizard.state.nextScene = types.CREATE_ID;
-        } else if (!ctx.wizard.state.create_mandatory_channel.link) {
-          ctx.wizard.state.nextScene = types.CREATE_LINK;
-        } else if (!ctx.wizard.state.create_mandatory_channel.name) {
-          ctx.wizard.state.nextScene = types.CREATE_NAME;
-        } else {
-          ctx.wizard.state.nextScene = types.CREATE;
-        }
-        ctx.wizard.state.create_mandatory_channel.description = message_text;
+        ctx.wizard.state.nextScene = types.ITEM;
+        await mandatoryChannelController.updateChannel({
+          id: ctx.wizard.state?.mandatory_channel_item?.id,
+          [ctx.wizard.state.item_mandatory_channel_update]: message_text
+        })
       }
       if (ctx.wizard.state.warning) {
         delete ctx.wizard.state.warning;

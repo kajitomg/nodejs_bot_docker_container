@@ -5,11 +5,10 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
-import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
-import types from './types';
+import { ScenesTypes } from '../../index';
 
-export const createEntryScene = composeWizardScene(
+export const createMenuProfileScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
     let language = ctx.scene.state?.options?.language
@@ -25,17 +24,15 @@ export const createEntryScene = composeWizardScene(
         }
       }
       ctx.i18n.locale(language)
-      const admin = adminUsers.includes(chat_id)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback(ctx.i18n.t('menu.buttons.games'), createNextScene(types.GAMES)),
-          Markup.button.callback(ctx.i18n.t('menu.buttons.profile'), createNextScene(types.PROFILE)),
-          Markup.button.callback(ctx.i18n.t('menu.buttons.services'), createNextScene(types.SERVICES), !admin),
-        ],{ columns: 2 }
+          Markup.button.callback(ctx.i18n.t('profile.buttons.change_language'), createNextScene(ScenesTypes.language.wizard.ENTRY)),
+          Markup.button.callback(ctx.i18n.t('profile.buttons.back'), createNextScene(ScenesTypes.menu.wizard.ENTRY)),
+        ],{ columns: 1 }
       )
-      await send(ctx, fmt(bold(ctx.i18n.t('menu.name')),'\n\n',italic(ctx.i18n.t('menu.data.choose_action'))), markup)
+      await send(ctx, fmt(bold(ctx.i18n.t('profile.name')),'\n\n',italic(ctx.i18n.t('profile.data.choose_action'))), markup)
     } catch (e) {
-      console.error(new HandlerError(400, 'Ошибка: Главное меню', e))
+      console.error(new HandlerError(400, 'Ошибка: Профиль', e))
     }
     return ctx.wizard.next();
   },
@@ -51,10 +48,10 @@ export const createEntryScene = composeWizardScene(
           ctx.wizard.state.nextScene = nextScene;
         }
       } else {
-        await ctx.sendMessage(ctx.i18n.t('menu.exit', {menu_name:ctx.i18n.t('menu.name')}))
+        await ctx.sendMessage(ctx.i18n.t('profile.exit', {menu_name: ctx.i18n.t('profile.name')}))
       }
     } catch (e) {
-      console.error(new HandlerError(400, 'Ошибка: Главное меню', e))
+      console.error(new HandlerError(400, 'Ошибка: Профиль', e))
     }
     
     return done();

@@ -6,6 +6,7 @@ import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
+import { ScenesTypes } from '../../index';
 import types from './types';
 
 export const createEntryBroadcastScene = composeWizardScene(
@@ -30,9 +31,10 @@ export const createEntryBroadcastScene = composeWizardScene(
         [
           Markup.button.callback('Получить текущее сообщение', createNextScene(types.GET)),
           Markup.button.callback('Создать новое сообщение', createNextScene(types.CREATE)),
+          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.SERVICES)),
         ],{ columns: 2 }
       )
-      await send(ctx, fmt(bold('Меню Рассылки сообщений'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
+      await send(ctx, fmt(bold('Рассылка'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Рассылки сообщений', e))
     }
@@ -48,10 +50,10 @@ export const createEntryBroadcastScene = composeWizardScene(
           ctx.wizard.state.nextScene = nextScene;
         }
       } else {
-        await ctx.sendMessage('Вы вышли из Меню Рассылки сообщений')
+        await ctx.sendMessage('Вы вышли из Рассылки')
       }
     } catch (e) {
-      console.error(new HandlerError(400, 'Ошибка: Меню Рассылки сообщений', e))
+      console.error(new HandlerError(400, 'Ошибка: Рассылка', e))
     }
     
     return done();

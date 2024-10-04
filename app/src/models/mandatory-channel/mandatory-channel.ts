@@ -18,7 +18,7 @@ const mandatoryChannelModel = sequelize.define<IMandatoryChannel>('mandatory-cha
   channel_id: {type: DataTypes.BIGINT, unique: true},
   name: {type: DataTypes.STRING},
   link: {type: DataTypes.STRING},
-  description: {type: DataTypes.INTEGER},
+  description: {type: DataTypes.STRING},
   active: {type: DataTypes.BOOLEAN},
   date_added: {type: DataTypes.DATE},
 })

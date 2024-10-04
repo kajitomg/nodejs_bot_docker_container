@@ -47,7 +47,7 @@ export const createPullRequestCodeHandlerScene = composeWizardScene(
     if (sceneId) {
       ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE;
     } else {
-      await ctx.sendMessage(ctx.i18n.t('code.pull.exit', { game: game.name }))
+      await ctx.sendMessage(ctx.i18n.t('code_moderate.exit',{ menu_name: ctx.i18n.t('code_moderate.name',{ game_name:game.name }) }))
     }
     return done();
   },

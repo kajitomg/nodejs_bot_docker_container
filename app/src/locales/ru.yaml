@@ -1,141 +1,253 @@
+exit: &exit Вы покинули меню «${menu_name}»
+choose_action: &choose_action 'Выберите интересующее вас действие:'
+
+get_all_codes: &get_all_codes Получить все коды
+search_codes: &search_codes Найти код по названию
+suggest_code: &suggest_code Предложить код
+suggest_code_new: &suggest_code_new Предложить новый код
+moderate_codes: &moderate_codes Модерировать коды
+create_code: &create_code Создать код
+create_code_new: &create_code_new Создать новый код
+back: &back Назад
+back_to: &back_to Вернуться в меню «${menu_name}»
+loader: &loader Идет загрузка данных...
+
+change: &change Изменить «${value}»
+
+start:
+  data:
+    command_list: 'Список команд:'
+    thanks_for_use: Спасибо за использование бота!
+    main_menu: Главное меню
+    profile: Профиль
+    games: Список игр
+
 menu:
-  header: Меню
-
-  body: 'Выберите интересующее вас действие:'
-
-  exit: Вы вышли из сцены меню
-
-changeLanguage:
-  header: Меню Выбора языка
-
-  body: 'Выберите язык:'
-
-  exit: Вы вышли из меню Выбора языка
-
+  name: Главное меню
+  data:
+    choose_action: *choose_action
   buttons:
-    back: Перейти в меню
+    games: Игры
+    profile: Профиль
+    services: Сервисы
+  exit: *exit
+
+games:
+  name: Игры
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    tapswap: TapSwap
+    xempire: X Empire
+    blum: Blum
+    back: *back
+
+profile:
+  name: Профиль
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    change_language: Сменить язык
+    back: *back
+
+services:
+  name: Сервисы
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    mandatory_subscription: Обязательная подписка
+    broadcast: Рассылка
+    back: *back
+
+change_language:
+  name: Язык
+  exit: *exit
+  data:
+    choose_language: 'Выберите язык:'
+  buttons:
+    back: *back
+    ru: RU
+    en: EN
 
 game:
-  header: Меню ${game}
-
-  body: 'Выберите интересующее вас действие:'
-
-  exit: Вы вышли из сцены меню ${game}
-
+  name: ${game_name}
+  exit: *exit
+  data:
+    choose_action: *choose_action
   buttons:
-    getAll: Получить все коды
-    search: Найти код по названию
-    pull: Предложить код
-    moderate: Модерировать коды
-    create: Создать код
-    back: Назад в меню
-code:
-  add:
-    header: Сцена создания кода ${game}
+    get_all: *get_all_codes
+    search: *search_codes
+    suggest: *suggest_code
+    moderate: *moderate_codes
+    create: *create_code
+    back_to: *back_to
+
+code_create:
+  name: Создание кода ${game_name}
+  exit: *exit
+  data:
     name: Название
     content: Содержание
-    exit: Вы вышли из меню создания кода ${game}
-    warning: Заполните обязательные поля
-    buttons:
-      name: Изменить название
-      content: Изменить содержание
-      create: Создать код
-      back: Назад в меню
-  addToDB:
-    header: 'Вы хотите добавить в базу данных ${game} код:'
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню создания кода ${game}
-    buttons:
-      create: Создать код
-      back: Назад в меню
-  addName:
-    header: 'Введите Название кода:'
-    name: Название
-    buttons:
-      back: Назад в меню
-  addContent:
-    header: 'Введите Содержание кода:'
-    content: Содержание
-    buttons:
-      back: Назад в меню
-  addEnd:
-    header:
+    choose_action: *choose_action
+    warning_fill_all_fields: Заполните обязательные поля*
+    warning_add_to_db: 'Вы уверены, что хотите добавить в базу данных ${game_name} код:'
+    send_value: 'Отправьте «${value}»:'
+    warning_end_dialog:
       - Произошла ошибка при добавлении кода!
       - Код успешно добавлен!
-    name: Изменить название
-    content: Изменить содержание
-    exit: Вы вышли из меню создания кода ${game}
-    buttons:
-      back: Вернуться в меню ${game}
-      create: Создать новый код
-  getAll:
-    header: 'Список кодов ${game}:'
-    help: Для копирования нажмите на код
-    paginationContent: 'Коды:'
-    emptyArray: Коды не найдены
-    loader: Идет загрузка данных...
-    exit: Вы вышли из меню кодов ${game}
-    buttons:
-      back: Назад в меню
-  give:
-    header: Предложить код ${game}
+  buttons:
+    change: *change
+    create: *create_code
+    create_new: *create_code_new
+    back: *back
+    back_to: *back_to
+
+code_get_all:
+  name: Список кодов ${game_name}
+  exit: *exit
+  data:
+    warning_to_copy_click_on_code: Для копирования нажмите на код
+    warning_codes_not_found: Коды не найдены
+    codes_pagination: 'Коды: '
+    loader: *loader
+  buttons:
+    back: *back
+
+code_suggest:
+  name: Предложение кодов ${game_name}
+  exit: *exit
+  data:
     name: Название
     content: Содержание
-    exit: Вы вышли из меню для предложений кода ${game}
-    warning: Заполните обязательные поля
-    buttons:
-      name: Изменить название
-      content: Изменить содержание
-      create: Отправить код
-      back: Назад в меню
-  giveToDB:
-    header: 'Вы хотите отправить код ${game} на модерацию:'
-    name: Название
-    content: Содержание
-    exit: Вы вышли из меню для предложений кода ${game}
-    buttons:
-      create: Предложить код
-      back: Назад в меню
-  giveName:
-    header: 'Введите Название кода:'
-    name: Название
-    buttons:
-      back: Назад в меню
-  giveContent:
-    header: 'Введите Содержание кода:'
-    content: Содержание
-    buttons:
-      back: Назад в меню
-  giveEnd:
-    header:
+    choose_action: *choose_action
+    warning_fill_all_fields: Заполните обязательные поля*
+    send_value: 'Отправьте «${value}»:'
+    warning_go_to_moderate: 'Вы уверены, что хотите отправить код ${game_name} на модерацию?'
+    warning_add_to_db:
       - Произошла ошибка при отправке кода!
       - Код успешно отправлен на модерацию!
-    name: Изменить название
-    content: Изменить содержание
-    exit: Вы вышли из меню для предложений кода ${game}
-    buttons:
-      back: Вернуться в меню ${game}
-      create: Предложить новый код
-  pull:
-    header: Меню модерации кодов ${game}
-    emptyArray: Нет предложенных кодов
+  buttons:
+    change: *change
+    suggest: *suggest_code
+    suggest_new: *suggest_code_new
+    back: *back
+    back_to: *back_to
+
+code_moderate:
+  name: Модерация кодов ${game_name}
+  exit: *exit
+  data:
     name: Название
     content: Содержание
-    exit: Вы вышли из меню модерации кодов ${game}
-    buttons:
-      back: Назад в меню
-      accept: Принять
-      reject: Отклонить
-      next: Следующий код
-      prev: Предыдущий код
-  search:
-    header: 'Поиск кодов ${game}:'
-    footer: 'Введите название видео:'
-    request: 'Коды по запросу: ${codeName}'
-    help: Для копирования нажмите на код
-    paginationContent: 'Коды:'
-    emptyArray: Нет соответствующих кодов
-    loader: Идет загрузка данных...
-    buttons:
-      back: Вернуться в меню
+    warning_codes_not_found: Нет предложенных кодов
+  buttons:
+    accept: Принять
+    reject: Отклонить
+    next: Следующий код
+    prev: Предыдущий код
+    back: *back
+
+code_search:
+  name: Поиск кодов ${game_name}
+  exit: *exit
+  data:
+    warning_fill_video_name: 'Введите название видео:'
+    warning_to_copy_click_on_code: Для копирования нажмите на код
+    warning_codes_not_found: Нет соответствующих кодов
+    codes_pagination: 'Коды: '
+    codes_list: 'Коды по запросу: ${code_name}'
+    loader: *loader
+  buttons:
+    back: *back
+
+broadcast_entry:
+  name: 'Рассылка'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    get_current_post: Получить текущий пост
+    create_new_post: Создать новый пост
+    back: *back
+broadcast_create:
+  name: 'Создание рассылки'
+  exit: *exit
+  data:
+    send_message: 'Отправьте сообщение:'
+  buttons:
+    back: *back
+broadcast_get:
+  name: 'Текущий пост'
+  exit: *exit
+  data:
+    forward_message: 'Пересланное сообщение ⬆'
+    warning_post_not_found: 'Нет поста'
+  buttons:
+    start_broadcast: Запустить рассылку
+    change_post: Сменить пост
+    back: *back
+broadcast_start:
+  name: 'Запуск рассылки'
+  exit: *exit
+  data:
+    forward_message: 'Пересланное сообщение ⬆'
+    warning_start_broadcast: Вы уверены, что хотите запустить рассылку?
+    warning_post_not_found: Нет поста
+  buttons:
+    start_broadcast: Запустить рассылку
+    change_post: Сменить пост
+    back_to: *back_to
+
+mandatory_subscription_entry:
+  name: 'Обязательная подписка'
+  exit: *exit
+  buttons:
+    add_channel: Добавить канал
+    list_channel: Список каналов
+    back_to: *back_to
+mandatory_subscription_create:
+  name: 'Создание канала ОП'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+    name: Название
+    description: Описание
+    id: ID
+    link: Ссылка
+    warning_fill_all_fields: Заполните обязательные поля*
+    send_value: 'Отправьте «${value}»:'
+  buttons:
+    change: *change
+    create_channel: 'Запустить рассылку'
+    back: *back
+mandatory_subscription_item:
+  name: 'Канал ОП'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+    name: Название
+    description: Описание
+    id: ID
+    link: Ссылка
+    active: Активирован
+    on: Включить
+    off: Выключить
+    send_value: 'Отправьте «${value}»:'
+  buttons:
+    change: *change
+    create_channel: 'Запустить рассылку'
+    back: *back
+mandatory_subscription_list:
+  name: Список каналов ОП
+  exit: *exit
+  buttons:
+    back: *back
+mandatory_subscription_check:
+  name: 'Подписка на каналы'
+  exit: *exit
+  buttons:
+    check_subscription: Проверить подписки
+    back_to: *back_to

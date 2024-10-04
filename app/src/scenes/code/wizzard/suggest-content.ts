@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { bold, fmt } from 'telegraf/format';
+import { bold, fmt, italic } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
@@ -8,8 +8,9 @@ import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
 
-export const createGiveCodeNameScene = composeWizardScene(
+export const createGiveCodeContentScene = composeWizardScene(
   async (ctx) => {
+    const game = ctx.wizard.state.options.game
     
     const chat_id = ctx.chat.id
     let language = ctx.scene.state?.options?.language
@@ -30,23 +31,29 @@ export const createGiveCodeNameScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code.giveName.buttons.back'), createNextScene(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), createNextScene(types.GIVE_CODE)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: fmt(ctx.i18n.t('code.giveName.header')),
-      body: fmt(fmt(`- ${ctx.i18n.t('code.giveName.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-')),
+      header: genMessage({
+        header: bold(ctx.i18n.t('code_suggest.name',{ game_name: game.name })),
+        body: italic(ctx.i18n.t('code_suggest.data.enter_value_code',{ value: ctx.i18n.t('code_suggest.data.content') })),
+      }),
+      body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })    //@ts-ignore
     ctx.wizard.state.delete_message_id = message?.message_id
+    
     return ctx.wizard.next();
   },
   async (ctx, done) => {
     const chatId = ctx.chat?.id;
     const callback_query = ctx.update?.callback_query?.data;
     const messageText = ctx.message?.text;
+    
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined)
     
@@ -56,14 +63,9 @@ export const createGiveCodeNameScene = composeWizardScene(
         ctx.wizard.state.nextScene = nextScene;
       }
     } else {
-      if (ctx.wizard.state.code_content) {
-        ctx.wizard.state.nextScene = types.GIVE_CODE;
-      } else {
-        ctx.wizard.state.nextScene = types.GIVE_CODE_CONTENT;
-      }
-      ctx.wizard.state.code_name = messageText;
+      ctx.wizard.state.nextScene = types.GIVE_CODE;
+      ctx.wizard.state.code_content = messageText;
     }
-    
     if (ctx.wizard.state.warning) {
       delete ctx.wizard.state.warning;
     }

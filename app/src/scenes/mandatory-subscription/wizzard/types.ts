@@ -2,6 +2,7 @@
 export default {
   ENTRY: 'mandatory_channel_entry',
   ITEM: 'mandatory_channel_item',
+  ITEM_UPDATE: 'mandatory_channel_item_update',
   LIST: 'mandatory_channel_list',
   CREATE: 'mandatory_channel_create',
   CREATE_ID: 'mandatory_channel_id',

@@ -5,6 +5,7 @@ import { createCreateMandatoryChannelLinkScene } from './create-link';
 import { createCreateMandatoryChannelNameScene } from './create-name';
 import { createEntryMandatoryChannelScene } from './entry';
 import { createItemMandatoryChannelScene } from './item';
+import { createItemUpdateMandatoryChannelScene } from './item-update';
 import { createListMandatoryChannelScene } from './list';
 import { createMandatoryChannelScene } from './mandatory';
 import types from './types';
@@ -21,4 +22,5 @@ export const WizardScenes = [
   createCreateMandatoryChannelNameScene(types.CREATE_NAME, (ctx) => ctx.wizard.state.nextScene),
   createCreateMandatoryChannelDescriptionScene(types.CREATE_DESCRIPTION, (ctx) => ctx.wizard.state.nextScene),
   createMandatoryChannelScene(types.MANDATORY, (ctx) => ctx.wizard.state.nextScene),
+  createItemUpdateMandatoryChannelScene(types.ITEM_UPDATE, (ctx) => ctx.wizard.state.nextScene),
 ]

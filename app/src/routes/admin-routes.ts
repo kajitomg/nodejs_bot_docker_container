@@ -13,9 +13,7 @@ adminBot.command('broadcast', async ctx => {
 })
 
 adminBot.command('mandatory', async ctx => {
-  // @ts-ignore
-  ctx.scene.state.mandatory_channel_next = ScenesTypes.mandatoryChannel.wizard.ENTRY
-  return await ctx.scene.enter(ScenesTypes.mandatoryChannel.wizard.MANDATORY, ctx.scene.state)
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.ENTRY)
 })
 
 export default Composer.acl(adminUsers,adminBot);

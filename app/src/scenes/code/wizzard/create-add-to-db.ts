@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { bold, fmt } from 'telegraf/format';
+import { bold, fmt, italic } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
@@ -32,14 +32,16 @@ export const createAddCodeAddToDBScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code.addToDB.buttons.back'), createNextScene(types.ADD_CODE)),
-        Markup.button.callback(ctx.i18n.t('code.addToDB.buttons.create'), 'create-code'),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.create'), 'create-code'),
       ],{ columns: 2 }
     )
-    
     const text = genMessage({
-      header: bold(ctx.i18n.t('code.addToDB.header',{game: game.name})),
-      body: fmt(fmt(`- ${ctx.i18n.t('code.addToDB.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code.addToDB.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: genMessage({
+        header: bold(ctx.i18n.t('code_create.name',{ game_name:game.name })),
+        body: italic(ctx.i18n.t('code_create.data.warning_add_to_db',{game_name: game.name})),
+      }),
+      body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
@@ -48,6 +50,8 @@ export const createAddCodeAddToDBScene = composeWizardScene(
   async (ctx, done) => {
     const game = ctx.wizard.state.options.game
     const callback_data = ctx.update?.callback_query?.data;
+    
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     if (callback_data) {
       const nextScene = getNextScene(callback_data)
@@ -66,7 +70,7 @@ export const createAddCodeAddToDBScene = composeWizardScene(
         ctx.wizard.state.nextScene = types.ADD_CODE_END_DIALOG;
       }
     } else {
-      await ctx.sendMessage(ctx.i18n.t('code.addToDB.exit',{ game: game.name }))
+      await ctx.sendMessage(ctx.i18n.t('code_create.exit',{ menu_name: ctx.i18n.t('code_create.name',{ game_name:game.name }) }))
     }
     return done();
   },

@@ -1,17 +1,17 @@
-import { createAddCodeScene } from './add-code';
-import { createAddCodeAddToDBScene } from './add-code-add-to-db';
-import { createAddCodeContentScene } from './add-code-content';
-import { createAddCodeEndDialogScene } from './add-code-end-dialog';
-import { createAddCodeNameScene } from './add-code-name';
-import { createGetAllCodesScene } from './get-all-codes';
-import { createGiveCodeScene } from './give-code';
-import { createGiveCodeAddToDBScene } from './give-code-add-to-db';
-import { createGiveCodeContentScene } from './give-code-content';
-import { createGiveCodeEndDialogScene } from './give-code-end-dialog';
-import { createGiveCodeNameScene } from './give-code-name';
-import { createPullRequestCodeScene } from './pull-request-code';
-import { createPullRequestCodeHandlerScene } from './pull-request-code-handler';
-import { createSearchCodesScene } from './search-codes';
+import { createAddCodeScene } from './create';
+import { createAddCodeAddToDBScene } from './create-add-to-db';
+import { createAddCodeContentScene } from './create-content';
+import { createAddCodeEndDialogScene } from './create-end-dialog';
+import { createAddCodeNameScene } from './create-name';
+import { createGetAllCodesScene } from './get-all';
+import { createGiveCodeScene } from './suggest';
+import { createGiveCodeAddToDBScene } from './suggest-add-to-db';
+import { createGiveCodeContentScene } from './suggest-content';
+import { createGiveCodeEndDialogScene } from './suggest-end-dialog';
+import { createGiveCodeNameScene } from './suggest-name';
+import { createPullRequestCodeScene } from './moderate';
+import { createPullRequestCodeHandlerScene } from './moderate-handler';
+import { createSearchCodesScene } from './search';
 import types from './types';
 
 export const WizardTypes = types

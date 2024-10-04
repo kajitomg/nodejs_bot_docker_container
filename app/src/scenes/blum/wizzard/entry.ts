@@ -31,19 +31,20 @@ export const createEntryScene = composeWizardScene(
           entry: types.ENTRY,
         },
       }
+      
       ctx.i18n.locale(language)
       const admin = adminUsers.includes(chatId)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback(ctx.i18n.t('game.buttons.getAll'), createNextScene(ScenesTypes.code.wizard.GET_ALL_CODES)),
+          Markup.button.callback(ctx.i18n.t('game.buttons.get_all'), createNextScene(ScenesTypes.code.wizard.GET_ALL_CODES)),
           Markup.button.callback(ctx.i18n.t('game.buttons.search'), createNextScene(ScenesTypes.code.wizard.SEARCH_CODES)),
-          Markup.button.callback(ctx.i18n.t('game.buttons.pull'), createNextScene(ScenesTypes.code.wizard.GIVE_CODE)),
+          Markup.button.callback(ctx.i18n.t('game.buttons.suggest'), createNextScene(ScenesTypes.code.wizard.GIVE_CODE)),
           Markup.button.callback(ctx.i18n.t('game.buttons.moderate'), createNextScene(ScenesTypes.code.wizard.PULL_REQUEST_CODE), !admin),
           Markup.button.callback(ctx.i18n.t('game.buttons.create'), createNextScene(ScenesTypes.code.wizard.ADD_CODE), !admin),
-          Markup.button.callback(ctx.i18n.t('game.buttons.back'), createNextScene(ScenesTypes.menu.wizard.ENTRY)),
+          Markup.button.callback(ctx.i18n.t('game.buttons.back_to',{ menu_name: ctx.i18n.t('games.name')}), createNextScene(ScenesTypes.menu.wizard.GAMES)),
         ],{ columns: 2 }
       )
-      await send(ctx, fmt(bold(ctx.i18n.t('game.header', {game: game.name})),'\n\n',italic(ctx.i18n.t('game.body'))), markup)
+      await send(ctx, fmt(bold(ctx.i18n.t('game.name',{ game_name:game.name })),'\n\n',italic(ctx.i18n.t('game.data.choose_action'))), markup)
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Blum', e))
     }
@@ -53,13 +54,19 @@ export const createEntryScene = composeWizardScene(
     const game = ctx.wizard.state?.options?.game
     const sceneId = ctx.update?.callback_query?.data;
     
-    if (sceneId) {
-      const nextScene = getNextScene(sceneId)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
+    try {
+      ctx.i18n.locale(ctx.scene.state?.options?.language)
+      
+      if (sceneId) {
+        const nextScene = getNextScene(sceneId)
+        if (nextScene) {
+          ctx.wizard.state.nextScene = nextScene;
+        }
+      } else {
+        await ctx.sendMessage(ctx.i18n.t('game.exit',{ menu_name: ctx.i18n.t('game.name',{ game_name:game.name }) }))
       }
-    } else {
-      await ctx.sendMessage(ctx.i18n.t('game.exit', {game: game.name}))
+    } catch (e) {
+      console.error(new HandlerError(400, 'Ошибка: Меню Blum', e))
     }
     return done();
   },

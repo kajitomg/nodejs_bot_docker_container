@@ -15,7 +15,7 @@ export const createEntryMandatoryChannelScene = composeWizardScene(
         [
           Markup.button.callback('Добавить канал', createNextScene(types.CREATE)),
           Markup.button.callback('Список каналов', createNextScene(types.LIST)),
-          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.ENTRY)),
+          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.SERVICES)),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Меню ОП'),'\n\n',italic('Выберите интересующее вас действие:')), markup)

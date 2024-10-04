@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { bold, fmt } from 'telegraf/format';
+import { bold, fmt, italic } from 'telegraf/format';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
@@ -9,11 +9,11 @@ import Slices from '../../../slices';
 import types from './types';
 
 const variants = {
-  0:'Произошла ошибка при отправке кода!',
-  1:'Код успешно отправлен на модерацию!'
+  0:'Произошла ошибка при добавлении кода!',
+  1:'Код успешно добавлен!'
 }
 
-export const createGiveCodeEndDialogScene = composeWizardScene(
+export const createAddCodeEndDialogScene = composeWizardScene(
   async (ctx) => {
     const game = ctx.wizard.state.options.game
     
@@ -36,14 +36,16 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code.giveEnd.buttons.back',{ game: game.name }), createNextScene(ctx.wizard.state.options.entry)),
-        Markup.button.callback(ctx.i18n.t('code.giveEnd.buttons.create'), createNextScene(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.create_new'), createNextScene(types.ADD_CODE)),
       ],{ columns: 2 }
     )
-    
     const text = genMessage({
-      header: bold(ctx.i18n.t(`code.giveEnd.header.${ctx.wizard.state.add_code_result}`)),
-      body: fmt(fmt(`- ${ctx.i18n.t('code.giveEnd.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code.giveEnd.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: genMessage({
+        header: bold(ctx.i18n.t('code_create.name',{ game_name:game.name })),
+        body: italic(ctx.i18n.t(`code_create.data.warning_end_dialog.${ctx.wizard.state.add_code_result}`)),
+      }),
+      body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
     })
     
     await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
@@ -58,13 +60,15 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     const game = ctx.wizard.state.options.game
     const callback_data = ctx.update?.callback_query?.data;
     
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
+    
     if (callback_data) {
       const nextScene = getNextScene(callback_data)
       if (nextScene) {
         ctx.wizard.state.nextScene = nextScene;
       }
     } else {
-      await ctx.sendMessage(ctx.i18n.t('code.giveEnd.exit',{ game: game.name }))
+      await ctx.sendMessage(ctx.i18n.t('code_create.exit',{ menu_name: ctx.i18n.t('code_create.name',{ game_name:game.name }) }))
     }
     return done();
   },

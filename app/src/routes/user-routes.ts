@@ -7,24 +7,34 @@ const userBot = new Composer<Scenes.SceneContext>();
 
 userBot.start(start)
 
-userBot.command('language', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.language.wizard.CHANGE_LANGUAGE)
-})
-
 userBot.command('menu', async ctx => {
   return await ctx.scene.enter(ScenesTypes.menu.wizard.ENTRY)
 })
 
+userBot.command('profile', async ctx => {
+  return await ctx.scene.enter(ScenesTypes.menu.wizard.PROFILE)
+})
+
+userBot.command('games', async ctx => {
+  return await ctx.scene.enter(ScenesTypes.menu.wizard.GAMES)
+})
+
 userBot.command('tapswap', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.tapSwap.wizard.ENTRY)
+  // @ts-ignore
+  ctx.scene.state.mandatory_channel_next = ScenesTypes.tapSwap.wizard.ENTRY
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 
 userBot.command('xempire', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.xEmpire.wizard.ENTRY)
+  // @ts-ignore
+  ctx.scene.state.mandatory_channel_next = ScenesTypes.xEmpire.wizard.ENTRY
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 
 userBot.command('blum', async ctx => {
-  return await ctx.scene.enter(ScenesTypes.blum.wizard.ENTRY)
+  // @ts-ignore
+  ctx.scene.state.mandatory_channel_next = ScenesTypes.blum.wizard.ENTRY
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 
 userBot.on('message', (ctx) => {

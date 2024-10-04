@@ -1,4 +1,4 @@
 
 export default {
-  CHANGE_LANGUAGE: 'change_language',
+  ENTRY: 'change_language_entry',
 }

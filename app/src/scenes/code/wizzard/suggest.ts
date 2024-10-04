@@ -8,9 +8,10 @@ import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
 
-export const createAddCodeScene = composeWizardScene(
+export const createGiveCodeScene = composeWizardScene(
   async (ctx) => {
     const game = ctx.wizard.state.options.game
+    
     const chat_id = ctx.chat.id
     let language = ctx.scene.state?.options?.language
     
@@ -28,18 +29,19 @@ export const createAddCodeScene = composeWizardScene(
     }
     ctx.i18n.locale(language)
     
+    
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code.add.buttons.name'), createNextScene(types.ADD_CODE_NAME)),
-        Markup.button.callback(ctx.i18n.t('code.add.buttons.content'), createNextScene(types.ADD_CODE_CONTENT)),
-        Markup.button.callback(ctx.i18n.t('code.add.buttons.create'), createNextScene(types.ADD_CODE_ADD_TO_DB)),
-        Markup.button.callback(ctx.i18n.t('code.add.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.name')}), createNextScene(types.GIVE_CODE_NAME)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.content')}), createNextScene(types.GIVE_CODE_CONTENT)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.suggest'), createNextScene(types.GIVE_CODE_ADD_TO_DB)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(ctx.i18n.t('code.add.header',{ game:game.name })),
-      body: fmt(fmt(`- ${ctx.i18n.t('code.add.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code.add.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      header: bold(ctx.i18n.t('code_suggest.name',{ game_name:game.name })),
+      body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code_suggest.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
       ...(ctx.wizard.state.warning && {footer: italic(`${ctx.wizard.state.warning}*`)})
     })
     
@@ -51,17 +53,19 @@ export const createAddCodeScene = composeWizardScene(
     const game = ctx.wizard.state.options.game
     const sceneId = ctx.update?.callback_query?.data;
     
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
+    
     if (sceneId) {
       const nextScene = getNextScene(sceneId)
       if (nextScene) {
         ctx.wizard.state.nextScene = nextScene;
       }
-      if (nextScene === types.ADD_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_name)) {
-        ctx.wizard.state.nextScene = types.ADD_CODE;
-        ctx.wizard.state.warning = ctx.i18n.t('code.add.warning');
+      if (nextScene === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
+        ctx.wizard.state.nextScene = types.GIVE_CODE;
+        ctx.wizard.state.warning = ctx.i18n.t('code_suggest.data.warning_fill_all_fields');
       }
     } else {
-      await ctx.sendMessage(ctx.i18n.t('code.add.exit',{ game:game.name }))
+      await ctx.sendMessage(ctx.i18n.t('code_suggest.exit',{ menu_name: ctx.i18n.t('code_suggest.name',{ game_name:game.name }) }))
     }
     return done();
   },

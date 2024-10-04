@@ -64,19 +64,19 @@ export const createPullRequestCodeScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code.pull.buttons.reject'), 'reject'),
-        Markup.button.callback(ctx.i18n.t('code.pull.buttons.accept'), 'accept'),
-        ctx.wizard.state.pull_request_code_pagination.prevPageButton(ctx.i18n.t('code.pull.buttons.prev')),
-        ctx.wizard.state.pull_request_code_pagination.nextPageButton(ctx.i18n.t('code.pull.buttons.next')),
-        Markup.button.callback(ctx.i18n.t('code.pull.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_moderate.buttons.reject'), 'reject'),
+        Markup.button.callback(ctx.i18n.t('code_moderate.buttons.accept'), 'accept'),
+        ctx.wizard.state.pull_request_code_pagination.prevPageButton(ctx.i18n.t('code_moderate.buttons.prev')),
+        ctx.wizard.state.pull_request_code_pagination.nextPageButton(ctx.i18n.t('code_moderate.buttons.next')),
+        Markup.button.callback(ctx.i18n.t('code_moderate.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
-      header: bold(ctx.i18n.t('code.pull.header', { game: game.name })),
+      header: bold(ctx.i18n.t('code_moderate.name',{ game_name:game.name })),
       body: code.items?.[0] ?
-        fmt(fmt(`- ${ctx.i18n.t('code.pull.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code.pull.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')) :
-        bold(ctx.i18n.t('code.pull.emptyArray'))
+        fmt(fmt(`- ${ctx.i18n.t('code_moderate.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n'),fmt(`- ${ctx.i18n.t('code_moderate.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')) :
+        bold(ctx.i18n.t('code_moderate.data.warning_codes_not_found'))
       ,
     })
     
@@ -88,6 +88,8 @@ export const createPullRequestCodeScene = composeWizardScene(
   async (ctx, done) => {
     const game = ctx.wizard.state.options.game
     const callbackData = ctx.update?.callback_query?.data;
+    
+    ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     if (callbackData) {
       const nextScene = getNextScene(callbackData)
@@ -111,7 +113,7 @@ export const createPullRequestCodeScene = composeWizardScene(
       })
       
     } else {
-      await ctx.sendMessage(ctx.i18n.t('code.pull.exit', { game: game.name }))
+      await ctx.sendMessage(ctx.i18n.t('code_moderate.exit',{ menu_name: ctx.i18n.t('code_moderate.name',{ game_name:game.name }) }))
     }
     return done();
   },

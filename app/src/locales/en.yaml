@@ -1,141 +1,186 @@
+exit: &exit You have left the «${menu_name}» menu
+choose_action: &choose_action 'Select the action you are interested in:'
+
+get_all_codes: &get_all_codes Get all codes
+search_codes: &search_codes Find the code by name
+suggest_code: &suggest_code Suggest a code
+suggest_code_new: &suggest_code_new Suggest a new code
+moderate_codes: &moderate_codes Moderate codes
+create_code: &create_code Create a code
+create_code_new: &create_code_new Create a new code
+back: &back Back
+back_to: &back_to Go back to the «${menu_name}» menu
+loader: &loader Data is being uploaded...
+
+change: &change Change the «${value}»
+
+start:
+  data:
+    command_list: 'Command list:'
+    thanks_for_use: Thanks for using the bot!
+    main_menu: Main menu
+    profile: Profile
+    games: List of games
+
 menu:
-  header: Menu
-
-  body: 'Select the action:'
-
-  exit: You have exited the menu scene
-
-changeLanguage:
-  header: Language Selection Menu
-
-  body: 'Select a language:'
-
-  exit: You have left the Language Selection menu
-
+  name: Main menu
+  data:
+    choose_action: *choose_action
   buttons:
-    back: Go to the menu
+    games: Games
+    profile: Profile
+    services: Services
+  exit: *exit
+
+games:
+  name: Games
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    tapswap: TapSwap
+    xempire: X Empire
+    blum: Blum
+    back: *back
+
+profile:
+  name: Profile
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    change_language: Change the language
+    back: *back
+
+services:
+  name: Services
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    mandatory_subscription: Mandatory subscription
+    broadcast: Broadcast
+    back: *back
+
+change_language:
+  name: Language
+  exit: *exit
+  data:
+    choose_language: 'Select a language:'
+  buttons:
+    back: *back
+    ru: RU
+    en: EN
 
 game:
-  header: ${game} Menu
-
-  body: 'Select the action:'
-
-  exit: You have exited the ${game} menu scene
-
+  name: ${game_name}
+  exit: *exit
+  data:
+    choose_action: *choose_action
   buttons:
-    getAll: Get all codes
-    search: Find the code by name
-    pull: Suggest a code
-    moderate: Moderate codes
-    create: Create a code
-    back: Back to the menu
-code:
-  add:
-    header: ${game} code creation scene
+    get_all: *get_all_codes
+    search: *search_codes
+    suggest: *suggest_code
+    moderate: *moderate_codes
+    create: *create_code
+    back_to: *back_to
+
+code_create:
+  name: Creating ${game_name} code
+  exit: *exit
+  data:
     name: Name
     content: Content
-    exit: You have exited the ${game} code creation menu
-    warning: Fill in the required fields
-    buttons:
-      name: Change the name
-      content: Change the content
-      create: Create a code
-      back: Back to the menu
-  addToDB:
-    header: 'Do you want to add the ${game} code to the database:'
-    name: Name
-    content: Content
-    exit: You have exited the ${game} code creation menu
-    buttons:
-      create: Create a code
-      back: Back to the menu
-  addName:
-    header: 'Enter the Code name:'
-    name: Name
-    buttons:
-      back: Back to the menu
-  addContent:
-    header: 'Enter the contents of the code:'
-    content: Content
-    buttons:
-      back: Back to the menu
-  addEnd:
-    header:
+    choose_action: *choose_action
+    warning_fill_all_fields: Fill in the required fields
+    warning_add_to_db: 'Are you sure you want to add the ${game_name} code to the database:'
+    enter_value_code: 'Enter the code ${value}:'
+    warning_end_dialog:
       - An error occurred while adding the code!
       - The code has been successfully added!
-    name: Change the name
-    content: Change the content
-    exit: You have exited the ${game} code creation menu
-    buttons:
-      back: Go back to the ${game} menu
-      create: Create a new code
-  getAll:
-    header: 'List of ${game} codes:'
-    help: To copy, click on the code
-    paginationContent: 'Codes:'
-    emptyArray: No codes found
-    loader: Data is being uploaded...
-    exit: You have exited the ${game} codes menu
-    buttons:
-      back: Back to the menu
-  give:
-    header: Suggest a ${game} code
+  buttons:
+    change: *change
+    create: *create_code
+    create_new: *create_code_new
+    back: *back
+    back_to: *back_to
+
+code_get_all:
+  name: List of ${game_name} codes
+  exit: *exit
+  data:
+    warning_to_copy_click_on_code: To copy, click on the code
+    warning_codes_not_found: No codes found
+    codes_pagination: 'Codes: '
+    loader: *loader
+  buttons:
+    back: *back
+
+code_suggest:
+  name: Suggestion ${game_name} codes
+  exit: *exit
+  data:
     name: Name
     content: Content
-    exit: You have left the menu for ${game} code suggestions
-    warning: Fill in the required fields
-    buttons:
-      name: Change the name
-      content: Change the content
-      create: Send the code
-      back: Back to the menu
-  giveToDB:
-    header: 'Do you want to submit the ${game} code for moderation:'
-    name: Name
-    content: Content
-    exit: You have left the menu for ${game} code suggestions
-    buttons:
-      create: Suggest a code
-      back: Back to the menu
-  giveName:
-    header: 'Enter the Code name:'
-    name: Name
-    buttons:
-      back: Back to the menu
-  giveContent:
-    header: 'Enter the Content name:'
-    content: Content
-    buttons:
-      back: Back to the menu
-  giveEnd:
-    header:
+    choose_action: *choose_action
+    warning_fill_all_fields: Fill in the required fields
+    enter_value_code: 'Enter the code ${value}:'
+    warning_go_to_moderate: 'Are you sure you want to submit the ${game_name} code for moderation?'
+    warning_add_to_db:
       - An error occurred while sending the code!
       - The code has been successfully submitted for moderation!
-    name: Change the name
-    content: Change the content
-    exit: You have left the menu for ${game} code suggestions
-    buttons:
-      back: Go back to the ${game} menu
-      create: Suggest a new code
-  pull:
-    header: ${game} Code Moderation menu
-    emptyArray: There are no suggested codes
+  buttons:
+    change: *change
+    suggest: *suggest_code
+    suggest_new: *suggest_code_new
+    back: *back
+    back_to: *back_to
+
+code_moderate:
+  name: Moderation of ${game_name} codes
+  exit: *exit
+  data:
     name: Name
     content: Content
-    exit: You have left the ${game} code moderation menu
-    buttons:
-      back: Back to the menu
-      accept: Accept
-      reject: Reject
-      next: Next code
-      prev: Previous code
-  search:
-    header: 'Search for ${game} codes:'
-    footer: 'Enter the name of the video:'
-    request: 'Codes on request: ${codeName}'
-    help: To copy, click on the code
-    paginationContent: 'Codes:'
-    emptyArray: There are no corresponding codes
-    loader: Data is being uploaded...
-    buttons:
-      back: Back to the menu
+    warning_codes_not_found: There are no suggested codes
+  buttons:
+    accept: Accept
+    reject: Reject
+    next: Next code
+    prev: Previous code
+    back: *back
+
+code_search:
+  name: Search for ${game_name} codes
+  exit: *exit
+  data:
+    warning_fill_video_name: 'Enter the name of the video:'
+    warning_to_copy_click_on_code: To copy, click on the code
+    warning_codes_not_found: There are no corresponding codes
+    codes_pagination: 'Codes: '
+    codes_list: 'Codes on request: ${code_name}'
+    loader: *loader
+  buttons:
+    back: *back
+
+
+broadcast_entry:
+  name: ''
+broadcast_create:
+  name: ''
+broadcast_get:
+  name: ''
+broadcast_start:
+  name: ''
+
+mandatory_subscription_create:
+  name: ''
+mandatory_subscription_entry:
+  name: ''
+mandatory_subscription_item:
+  name: ''
+mandatory_subscription_list:
+  name: ''
+mandatory_subscription_check:
+  name: ''
+

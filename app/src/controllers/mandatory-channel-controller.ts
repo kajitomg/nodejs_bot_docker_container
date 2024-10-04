@@ -10,7 +10,7 @@ type viewDataType = Pick<IMandatoryChannel, 'name' | 'description' | 'channel_id
 type optionsType = Pick<IMandatoryChannel, 'active'>
 
 type createDataType = Pick<viewDataType, 'name' | 'link' | 'channel_id'> & Partial<optionsType> & Partial<viewDataType>
-type updateDataType = indentDataType & Partial<viewDataType>
+type updateDataType = indentDataType & Partial<viewDataType> & Partial<optionsType>
 
 export default {
   
