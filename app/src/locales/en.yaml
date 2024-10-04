@@ -94,7 +94,7 @@ code_create:
     choose_action: *choose_action
     warning_fill_all_fields: Fill in the required fields
     warning_add_to_db: 'Are you sure you want to add the ${game_name} code to the database:'
-    enter_value_code: 'Enter the code ${value}:'
+    send_value: 'Enter the code ${value}:'
     warning_end_dialog:
       - An error occurred while adding the code!
       - The code has been successfully added!
@@ -124,7 +124,7 @@ code_suggest:
     content: Content
     choose_action: *choose_action
     warning_fill_all_fields: Fill in the required fields
-    enter_value_code: 'Enter the code ${value}:'
+    send_value: 'Enter the code ${value}:'
     warning_go_to_moderate: 'Are you sure you want to submit the ${game_name} code for moderation?'
     warning_add_to_db:
       - An error occurred while sending the code!

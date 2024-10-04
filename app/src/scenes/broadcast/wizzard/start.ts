@@ -59,6 +59,7 @@ export const createStartBroadcastScene = composeWizardScene(
           const author = ctx.from
           const msg = new FmtString(ctx.wizard.state.broadcast?.text?.value, ctx.wizard.state.broadcast?.text?.entities)
           const users = await Slices.user.crud.gets()
+          ctx.deleteMessage()
           try {
             for (const user of users.list) {
               try {
@@ -72,7 +73,6 @@ export const createStartBroadcastScene = composeWizardScene(
                 console.log(user.chat_id + ' ' + error.response?.error_code + ' ' + error.response?.description)
               }
             }
-            ctx.deleteMessage()
           } catch (error) {
             console.log(author.username + ' ' + error.response?.error_code + ' ' + error.response?.description)
           }
@@ -84,6 +84,6 @@ export const createStartBroadcastScene = composeWizardScene(
       console.error(new HandlerError(400, 'Ошибка: Меню Запуска рассылки сообщений', e))
     }
     
-    return done();
+    return await done();
   },
 );

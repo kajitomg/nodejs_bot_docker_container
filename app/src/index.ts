@@ -27,6 +27,10 @@ bot.use(adminRoutes)
 
 bot.use(userRoutes)
 
+bot.catch((err, ctx) => {
+  console.log(err)
+})
+
 const db = services.db
 
 const server = services.server

@@ -38,9 +38,9 @@ export const createGiveCodeContentScene = composeWizardScene(
     const text = genMessage({
       header: genMessage({
         header: bold(ctx.i18n.t('code_suggest.name',{ game_name: game.name })),
-        body: italic(ctx.i18n.t('code_suggest.data.enter_value_code',{ value: ctx.i18n.t('code_suggest.data.content') })),
+        body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
       }),
-      body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      body: italic(ctx.i18n.t('code_suggest.data.send_value',{ value: ctx.i18n.t('code_suggest.data.content') })),
     })
     
     const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })    //@ts-ignore
