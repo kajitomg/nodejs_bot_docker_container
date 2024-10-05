@@ -5,6 +5,7 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
 
 export const createCreateMandatoryChannelScene = composeWizardScene(
@@ -17,15 +18,17 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
         description: null,
         ...ctx.wizard.state.create_mandatory_channel,
       }
+      const chat_id = ctx.chat.id
       
+      const admin = adminUsers.includes(chat_id)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Изменить ID', createNextScene(types.CREATE_ID)),
-          Markup.button.callback('Изменить ссылку', createNextScene(types.CREATE_LINK)),
-          Markup.button.callback('Изменить название', createNextScene(types.CREATE_NAME)),
-          Markup.button.callback('Изменить описание', createNextScene(types.CREATE_DESCRIPTION)),
-          Markup.button.callback('Добавить канал', 'create'),
-          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
+          Markup.button.callback('Изменить ID', createNextScene(types.CREATE_ID), !admin),
+          Markup.button.callback('Изменить ссылку', createNextScene(types.CREATE_LINK), !admin),
+          Markup.button.callback('Изменить название', createNextScene(types.CREATE_NAME), !admin),
+          Markup.button.callback('Изменить описание', createNextScene(types.CREATE_DESCRIPTION), !admin),
+          Markup.button.callback('Добавить канал', 'create', !admin),
+          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY), !admin),
         ],{ columns: 2 }
       )
 

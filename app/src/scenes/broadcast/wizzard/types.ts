@@ -1,7 +1,7 @@
 
 export default {
-  ENTRY: 'entry_broadcast',
-  START: 'start_broadcast',
-  CREATE: 'create_broadcast',
-  GET: 'get_broadcast',
+  ENTRY: 'entry_broadcast_upd',
+  START: 'start_broadcast_upd',
+  CREATE: 'create_broadcast_upd',
+  GET: 'get_broadcast_upd',
 }

@@ -6,12 +6,15 @@ import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { sleep } from '../../../helpers/sleep';
 import { Languages } from '../../../models/user/user-model';
+import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import types from './types';
 
 export const createStartBroadcastScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
+    
+    const admin = adminUsers.includes(chat_id)
     let language = ctx.scene.state?.options?.language
     try {
       if(!language) {
@@ -29,9 +32,9 @@ export const createStartBroadcastScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Запустить пост', 'start', !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
-          Markup.button.callback('Сменить пост', createNextScene(types.CREATE)),
-          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY))
+          Markup.button.callback('Запустить пост', 'start',!admin && !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
+          Markup.button.callback('Сменить пост', createNextScene(types.CREATE), !admin),
+          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY), !admin)
         ],{ columns: 2 }
       )
       if (ctx.wizard.state.broadcast?.forward) {

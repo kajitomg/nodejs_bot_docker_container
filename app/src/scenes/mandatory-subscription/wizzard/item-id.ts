@@ -5,15 +5,19 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
 
 export const createCreateMandatoryChannelIdScene = composeWizardScene(
   async (ctx) => {
     try {
+      const chat_id = ctx.chat.id
+      
+      const admin = adminUsers.includes(chat_id)
       
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Назад в меню', createNextScene(types.CREATE)),
+          Markup.button.callback('Назад в меню', createNextScene(types.CREATE), !admin),
         ],{ columns: 2 }
       )
       const message = await send(ctx, fmt(

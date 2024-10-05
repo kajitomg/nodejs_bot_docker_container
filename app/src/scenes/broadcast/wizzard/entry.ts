@@ -5,6 +5,7 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
+import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import { ScenesTypes } from '../../index';
 import types from './types';
@@ -12,6 +13,8 @@ import types from './types';
 export const createEntryBroadcastScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
+    
+    const admin = adminUsers.includes(chat_id)
     let language = ctx.scene.state?.options?.language
     try {
       if(!language) {
@@ -29,9 +32,9 @@ export const createEntryBroadcastScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Получить текущее сообщение', createNextScene(types.GET)),
-          Markup.button.callback('Создать новое сообщение', createNextScene(types.CREATE)),
-          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.SERVICES)),
+          Markup.button.callback('Получить текущее сообщение', createNextScene(types.GET), !admin),
+          Markup.button.callback('Создать новое сообщение', createNextScene(types.CREATE), !admin),
+          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.SERVICES), !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Рассылка'),'\n\n',italic('Выберите интересующее вас действие:')), markup)

@@ -5,12 +5,15 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
+import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import types from './types';
 
 export const createCreateBroadcastScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
+    
+    const admin = adminUsers.includes(chat_id)
     let language = ctx.scene.state?.options?.language
     try {
       if(!language) {
@@ -26,7 +29,7 @@ export const createCreateBroadcastScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY))
+          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY), !admin)
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Введите сообщение:')), markup);

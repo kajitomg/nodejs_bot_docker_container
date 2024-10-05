@@ -7,6 +7,7 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createGoToChannel } from '../../../helpers/go-to-channel';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { ScenesTypes } from '../../index';
 import types from './types';
 const reqChannelIDs = ['-1002216264610', '-1002206346301']
 
@@ -65,7 +66,7 @@ export const createMandatoryChannelScene = composeWizardScene(
         [
           ...buttons,
           Markup.button.callback('Проверить подписки', createNextScene(types.MANDATORY)),
-          Markup.button.callback('Назад в меню', createNextScene(types.LIST)),
+          Markup.button.callback('Назад в меню «Игры»', createNextScene(ScenesTypes.menu.wizard.GAMES)),
         ],{ columns: 1 }
       )
       await send(ctx, fmt(

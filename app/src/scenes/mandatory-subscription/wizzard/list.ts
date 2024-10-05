@@ -6,17 +6,21 @@ import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createGoToChannel, getGoToChannel } from '../../../helpers/go-to-channel';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
 
 export const createListMandatoryChannelScene = composeWizardScene(
   async (ctx) => {
     try {
+      const chat_id = ctx.chat.id
+      
+      const admin = adminUsers.includes(chat_id)
       const list = await mandatoryChannelController.getChannels()
       
       const markup = Markup.inlineKeyboard(
         [
-          ...list.items.map((channel) => Markup.button.callback(`${channel.name} | ${channel.active ? '✔️' :'❌'}`, createGoToChannel(channel.id))),
-          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
+          ...list.items.map((channel) => Markup.button.callback(`${channel.name} | ${channel.active ? '✔️' :'❌'}`, createGoToChannel(channel.id), !admin)),
+          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY), !admin),
         ],{ columns: 1 }
       )
       await send(ctx, fmt(

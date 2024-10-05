@@ -6,6 +6,7 @@ import { CallbackWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
+import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
 
 const ToItemUpdate = new CallbackWrapper('to_item_update')
@@ -13,6 +14,9 @@ const ToItemUpdate = new CallbackWrapper('to_item_update')
 export const createItemMandatoryChannelScene = composeWizardScene(
   async (ctx) => {
     try {
+      const chat_id = ctx.chat.id
+      
+      const admin = adminUsers.includes(chat_id)
       const item = await mandatoryChannelController.getChannel({
         id: ctx.wizard.state?.mandatory_channel_item?.id
       })
@@ -27,12 +31,12 @@ export const createItemMandatoryChannelScene = composeWizardScene(
       
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Изменить название', ToItemUpdate.create('name')),
-          Markup.button.callback('Изменить описание', ToItemUpdate.create('description')),
-          Markup.button.callback('Изменить ID', ToItemUpdate.create('channel_id')),
-          Markup.button.callback('Изменить ссылку', ToItemUpdate.create('link')),
-          Markup.button.callback(item.item.active ? 'Выключить' : 'Включить', ToItemUpdate.create('active')),
-          Markup.button.callback('Назад в меню', createNextScene(types.LIST)),
+          Markup.button.callback('Изменить название', ToItemUpdate.create('name'), !admin),
+          Markup.button.callback('Изменить описание', ToItemUpdate.create('description'), !admin),
+          Markup.button.callback('Изменить ID', ToItemUpdate.create('channel_id'), !admin),
+          Markup.button.callback('Изменить ссылку', ToItemUpdate.create('link'), !admin),
+          Markup.button.callback(item.item.active ? 'Выключить' : 'Включить', ToItemUpdate.create('active'), !admin),
+          Markup.button.callback('Назад в меню', createNextScene(types.LIST), !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(
