@@ -9,7 +9,13 @@ export default async (ctx:Context, text:string | FmtString<any>, extra?: ExtraEd
       return await ctx.reply(text, extra);
     } else if (ctx.updateType === 'callback_query') {
       await ctx.answerCbQuery();
-      return await ctx.editMessageText(text, extra);
+      //@ts-ignore
+      if (ctx.callbackQuery.message?.text) {
+        return await ctx.editMessageText(text, extra);
+        //@ts-ignore
+      } else  if (ctx.callbackQuery.message?.photo || ctx.callbackQuery.message?.video || ctx.callbackQuery.message?.document || ctx.callbackQuery.message?.audio) {
+        return await ctx.editMessageCaption(text, extra);
+      }
     }
   } catch (e) {
     console.error(new HandlerError(400, 'Ошибка: Отправка сообщения', e))

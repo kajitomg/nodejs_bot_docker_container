@@ -1,13 +1,16 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 export const createAddCodeAddToDBScene = composeWizardScene(
   async (ctx) => {
@@ -32,7 +35,7 @@ export const createAddCodeAddToDBScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), nextSceneHandler.create(types.ADD_CODE)),
         Markup.button.callback(ctx.i18n.t('code_create.buttons.create'), 'create-code'),
       ],{ columns: 2 }
     )
@@ -54,10 +57,9 @@ export const createAddCodeAddToDBScene = composeWizardScene(
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     if (callback_data) {
-      const nextScene = getNextScene(callback_data)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+      })
       if (callback_data === 'create-code') {
         const code = await codeController.createCode({
           name: ctx.wizard.state.code_name,

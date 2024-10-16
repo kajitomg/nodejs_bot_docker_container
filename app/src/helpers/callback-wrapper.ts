@@ -1,7 +1,6 @@
-
 type DataType = string
 
-export class CallbackWrapper {
+export class CallbackQueryWrapper {
   private readonly wrapper: string
   constructor(wrapper: string) {
     this.wrapper = wrapper
@@ -16,12 +15,19 @@ export class CallbackWrapper {
     return data.match(reg)?.[1]
   }
   
-  static nextScene() {
-    return new CallbackWrapper('next_scene')
+  async on(data: DataType, callback: (value: string) => Promise<void>): Promise<void> {
+    const value = this.get(data)
+    if (value) {
+      await callback(value)
+    }
   }
   
-  static goToChannel() {
-    return new CallbackWrapper('goto_channel')
+  static nextSceneHandler() {
+    return new CallbackQueryWrapper('next_scene')
+  }
+  
+  static goToChannelHandler() {
+    return new CallbackQueryWrapper('goto_channel')
   }
   
 }

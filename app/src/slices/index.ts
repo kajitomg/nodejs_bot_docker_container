@@ -1,3 +1,4 @@
+import { activitySlices } from './activity';
 import { UserSlices } from './user';
 import { codeSlices } from './code';
 import { mandatoryChannelSlices } from './mandatory-channel';
@@ -6,6 +7,7 @@ export class Slices {
   private _user: UserSlices
   private _code: typeof codeSlices
   private _mandatoryChannel: typeof mandatoryChannelSlices
+  private _activity: typeof activitySlices
   
   constructor() {}
   
@@ -28,6 +30,13 @@ export class Slices {
       this._mandatoryChannel = mandatoryChannelSlices;
     }
     return this._mandatoryChannel;
+  }
+  
+  get activity() {
+    if (!this._activity) {
+      this._activity = activitySlices;
+    }
+    return this._activity;
   }
 }
 

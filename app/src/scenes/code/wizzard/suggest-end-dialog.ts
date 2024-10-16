@@ -1,12 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 const variants = {
   0:'Произошла ошибка при отправке кода!',
@@ -36,8 +39,8 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), createNextScene(ctx.wizard.state.options.entry)),
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.suggest_new'), createNextScene(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), nextSceneHandler.create(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.suggest_new'), nextSceneHandler.create(types.GIVE_CODE)),
       ],{ columns: 2 }
     )
     const text = genMessage({
@@ -63,10 +66,9 @@ export const createGiveCodeEndDialogScene = composeWizardScene(
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     if (callback_data) {
-      const nextScene = getNextScene(callback_data)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+      })
     } else {
       await ctx.sendMessage(ctx.i18n.t('code_suggest.exit',{ menu_name: ctx.i18n.t('code_suggest.name',{ game_name:game.name }) }))
     }

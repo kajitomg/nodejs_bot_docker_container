@@ -2,16 +2,19 @@ import { Markup } from 'telegraf';
 import { bold, code, fmt, FmtString, italic } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import createListMessage from '../../../helpers/create-list-message';
 import { createMessageSample, genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses } from '../../../models/code';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 const limit = 25
 
@@ -58,7 +61,7 @@ export const createGetAllCodesScene = composeWizardScene(
               ctx.wizard.state.all_codes_pagination.prevPageButton(),
               Markup.button.callback(`${data?.page || '*'}/${data?.max_pages  || data?.page || '*'}(↻)`, 'force_update'),
               ctx.wizard.state.all_codes_pagination.nextPageButton(),
-              Markup.button.callback(ctx.i18n.t('code_get_all.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+              Markup.button.callback(ctx.i18n.t('code_get_all.buttons.back'), nextSceneHandler.create(ctx.wizard.state.options.entry)),
             ],{ columns: 3 }
           )
           
@@ -143,10 +146,9 @@ export const createGetAllCodesScene = composeWizardScene(
     
     try {
       if (callback_data) {
-        const nextScene = getNextScene(callback_data)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
         ctx.wizard.state.all_codes_pagination.onPrevPage(callback_data, () => {
           ctx.wizard.state.nextScene = types.GET_ALL_CODES;
         })

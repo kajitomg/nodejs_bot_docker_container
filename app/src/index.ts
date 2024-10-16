@@ -18,7 +18,6 @@ const stage = new Scenes.Stage<Scenes.SceneContext>([
   ...WizardScenes,
 ])
 
-
 bot.use(i18n.middleware());
 bot.use(session())
 bot.use(stage.middleware())

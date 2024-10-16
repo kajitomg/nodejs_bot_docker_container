@@ -175,7 +175,7 @@ broadcast_entry:
     create_new_post: Создать новый пост
     back: *back
 broadcast_create:
-  name: 'Создание рассылки'
+  name: 'Создание поста рассылки'
   exit: *exit
   data:
     send_message: 'Отправьте сообщение:'

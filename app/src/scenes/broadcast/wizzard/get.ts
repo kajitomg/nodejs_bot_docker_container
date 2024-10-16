@@ -1,13 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic, FmtString } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createGetBroadcastScene = composeWizardScene(
   async (ctx) => {
@@ -31,9 +33,9 @@ export const createGetBroadcastScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Запустить пост', createNextScene(types.START),!admin && !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
-          Markup.button.callback('Сменить пост', createNextScene(types.CREATE), !admin),
-          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY), !admin)
+          Markup.button.callback('Запустить пост', nextSceneHandler.create(types.START),!admin && !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
+          Markup.button.callback('Сменить пост', nextSceneHandler.create(types.CREATE), !admin),
+          Markup.button.callback('Назад к списку действий', nextSceneHandler.create(types.ENTRY), !admin)
         ],{ columns: 2 }
       )
       if (ctx.wizard.state.broadcast?.forward) {
@@ -52,14 +54,14 @@ export const createGetBroadcastScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const sceneId = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     try {
-      if (sceneId) {
-        const nextScene = getNextScene(sceneId)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+          
+        })
       } else {
         await ctx.sendMessage('Вы вышли из Меню Рассылки сообщений')
       }

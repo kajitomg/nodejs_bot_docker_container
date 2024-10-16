@@ -1,4 +1,5 @@
 import codeController from '../../../controllers/code-controller';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { CodeStatuses } from '../../../models/code';
 import { Languages } from '../../../models/user/user-model';

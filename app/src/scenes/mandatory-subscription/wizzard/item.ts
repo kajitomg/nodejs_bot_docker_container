@@ -2,14 +2,14 @@ import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import mandatoryChannelController from '../../../controllers/mandatory-channel-controller';
 import { HandlerError } from '../../../exceptions/api-error';
-import { CallbackWrapper } from '../../../helpers/callback-wrapper';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
 
-const ToItemUpdate = new CallbackWrapper('to_item_update')
+const updateChannelHandler = new CallbackQueryWrapper('update_channel')
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createItemMandatoryChannelScene = composeWizardScene(
   async (ctx) => {
@@ -31,12 +31,12 @@ export const createItemMandatoryChannelScene = composeWizardScene(
       
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Изменить название', ToItemUpdate.create('name'), !admin),
-          Markup.button.callback('Изменить описание', ToItemUpdate.create('description'), !admin),
-          Markup.button.callback('Изменить ID', ToItemUpdate.create('channel_id'), !admin),
-          Markup.button.callback('Изменить ссылку', ToItemUpdate.create('link'), !admin),
-          Markup.button.callback(item.item.active ? 'Выключить' : 'Включить', ToItemUpdate.create('active'), !admin),
-          Markup.button.callback('Назад в меню', createNextScene(types.LIST), !admin),
+          Markup.button.callback('Изменить название', updateChannelHandler.create('name'), !admin),
+          Markup.button.callback('Изменить описание', updateChannelHandler.create('description'), !admin),
+          Markup.button.callback('Изменить ID', updateChannelHandler.create('channel_id'), !admin),
+          Markup.button.callback('Изменить ссылку', updateChannelHandler.create('link'), !admin),
+          Markup.button.callback(item.item.active ? 'Выключить' : 'Включить', updateChannelHandler.create('active'), !admin),
+          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.LIST), !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(
@@ -57,15 +57,13 @@ export const createItemMandatoryChannelScene = composeWizardScene(
     
     try {
       if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        const toItemUpdate = ToItemUpdate.get(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
-        if (toItemUpdate) {
-          ctx.wizard.state.item_mandatory_channel_update = toItemUpdate
+        await nextSceneHandler.on(callback_query, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
+        await updateChannelHandler.on(callback_query, async (value) => {
+          ctx.wizard.state.item_mandatory_channel_update = value
           ctx.wizard.state.nextScene = types.ITEM_UPDATE;
-          if(toItemUpdate === 'active') {
+          if(value === 'active') {
             await mandatoryChannelController.updateChannel({
               id: ctx.wizard.state?.mandatory_channel_item?.id,
               [ctx.wizard.state.item_mandatory_channel_update]: !ctx.wizard.state.item_mandatory_channel.active
@@ -73,7 +71,7 @@ export const createItemMandatoryChannelScene = composeWizardScene(
             ctx.wizard.state.nextScene = types.ITEM;
             delete ctx.wizard.state.item_mandatory_channel_update
           }
-        }
+        })
       }  else {
         await ctx.sendMessage('Вы вышли из Меню Канал ОП')
       }

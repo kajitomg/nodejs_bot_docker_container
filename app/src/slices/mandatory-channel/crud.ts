@@ -166,7 +166,7 @@ export const crud = {
   
   /*
   get: async function(data:{ id:number }) {
-    const code = await codeModel.findOne({ where: data })
+    const code = await activityModel.findOne({ where: data })
     
     if (!code) {
       console.log(`Кода с id ${data.id} не существует`)
@@ -186,7 +186,7 @@ export const crud = {
     limit?: number,
     search?: string
   }) {
-    const codes = await codeModel.findAndCountAll({
+    const codes = await activityModel.findAndCountAll({
       limit: queries?.limit,
       offset: queries?.page && queries?.limit && (queries?.limit * (queries?.page - 1)),
       ...(queries?.search && {where: {

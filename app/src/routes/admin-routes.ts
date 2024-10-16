@@ -6,6 +6,8 @@ export const adminUsers = [
   1259372103
 ]
 
+export const isAdmin = (chat_id: number) => adminUsers.includes(chat_id)
+
 const adminBot = new Composer<Scenes.SceneContext>();
 
 adminBot.command('broadcast', async ctx => {

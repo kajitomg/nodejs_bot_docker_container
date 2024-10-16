@@ -1,12 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 export const createGiveCodeScene = composeWizardScene(
   async (ctx) => {
@@ -32,10 +35,10 @@ export const createGiveCodeScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.name')}), createNextScene(types.GIVE_CODE_NAME)),
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.content')}), createNextScene(types.GIVE_CODE_CONTENT)),
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.suggest'), createNextScene(types.GIVE_CODE_ADD_TO_DB)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.name')}), nextSceneHandler.create(types.GIVE_CODE_NAME)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.change', {value: ctx.i18n.t('code_suggest.data.content')}), nextSceneHandler.create(types.GIVE_CODE_CONTENT)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), nextSceneHandler.create(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.suggest'), nextSceneHandler.create(types.GIVE_CODE_ADD_TO_DB)),
       ],{ columns: 2 }
     )
     
@@ -51,19 +54,18 @@ export const createGiveCodeScene = composeWizardScene(
   },
   async (ctx, done) => {
     const game = ctx.wizard.state.options.game
-    const sceneId = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
-    if (sceneId) {
-      const nextScene = getNextScene(sceneId)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
-      if (nextScene === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
-        ctx.wizard.state.nextScene = types.GIVE_CODE;
-        ctx.wizard.state.warning = ctx.i18n.t('code_suggest.data.warning_fill_all_fields');
-      }
+    if (callback_data) {
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+        if (value === types.GIVE_CODE_ADD_TO_DB && (!ctx.wizard.state.code_name || !ctx.wizard.state.code_content)) {
+          ctx.wizard.state.nextScene = types.GIVE_CODE;
+          ctx.wizard.state.warning = ctx.i18n.t('code_suggest.data.warning_fill_all_fields');
+        }
+      })
     } else {
       await ctx.sendMessage(ctx.i18n.t('code_suggest.exit',{ menu_name: ctx.i18n.t('code_suggest.name',{ game_name:game.name }) }))
     }

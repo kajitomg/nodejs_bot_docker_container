@@ -2,11 +2,13 @@ import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import mandatoryChannelController from '../../../controllers/mandatory-channel-controller';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createCreateMandatoryChannelScene = composeWizardScene(
   async (ctx) => {
@@ -23,12 +25,12 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
       const admin = adminUsers.includes(chat_id)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Изменить ID', createNextScene(types.CREATE_ID), !admin),
-          Markup.button.callback('Изменить ссылку', createNextScene(types.CREATE_LINK), !admin),
-          Markup.button.callback('Изменить название', createNextScene(types.CREATE_NAME), !admin),
-          Markup.button.callback('Изменить описание', createNextScene(types.CREATE_DESCRIPTION), !admin),
+          Markup.button.callback('Изменить ID', nextSceneHandler.create(types.CREATE_ID), !admin),
+          Markup.button.callback('Изменить ссылку', nextSceneHandler.create(types.CREATE_LINK), !admin),
+          Markup.button.callback('Изменить название', nextSceneHandler.create(types.CREATE_NAME), !admin),
+          Markup.button.callback('Изменить описание', nextSceneHandler.create(types.CREATE_DESCRIPTION), !admin),
           Markup.button.callback('Добавить канал', 'create', !admin),
-          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY), !admin),
+          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.ENTRY), !admin),
         ],{ columns: 2 }
       )
 
@@ -51,15 +53,14 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     try {
-      if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
-        if (callback_query === 'create') {
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
+        if (callback_data === 'create') {
           if ( ctx.wizard.state.create_mandatory_channel.id && ctx.wizard.state.create_mandatory_channel.link && ctx.wizard.state.create_mandatory_channel.name ) {
             ctx.wizard.next();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
@@ -90,8 +91,8 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
       
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Добавить новый канал', createNextScene(types.CREATE)),
-          Markup.button.callback('Назад в меню', createNextScene(types.ENTRY)),
+          Markup.button.callback('Добавить новый канал', nextSceneHandler.create(types.CREATE)),
+          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.ENTRY)),
         ],{ columns: 2 }
       )
       await send(ctx,
@@ -111,14 +112,13 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     try {
-      if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
       } else {
         await ctx.sendMessage('Вы вышли из сцены Создание канала ОП')
       }

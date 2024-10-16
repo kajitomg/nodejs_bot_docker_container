@@ -1,15 +1,18 @@
 import { Markup } from 'telegraf';
 import { bold, fmt } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { CodeStatuses } from '../../../models/code';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 const limit = 1
 
@@ -68,7 +71,7 @@ export const createPullRequestCodeScene = composeWizardScene(
         Markup.button.callback(ctx.i18n.t('code_moderate.buttons.accept'), 'accept'),
         ctx.wizard.state.pull_request_code_pagination.prevPageButton(ctx.i18n.t('code_moderate.buttons.prev')),
         ctx.wizard.state.pull_request_code_pagination.nextPageButton(ctx.i18n.t('code_moderate.buttons.next')),
-        Markup.button.callback(ctx.i18n.t('code_moderate.buttons.back'), createNextScene(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_moderate.buttons.back'), nextSceneHandler.create(ctx.wizard.state.options.entry)),
       ],{ columns: 2 }
     )
     
@@ -87,28 +90,27 @@ export const createPullRequestCodeScene = composeWizardScene(
   },
   async (ctx, done) => {
     const game = ctx.wizard.state.options.game
-    const callbackData = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
-    if (callbackData) {
-      const nextScene = getNextScene(callbackData)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
+    if (callback_data) {
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+      })
       
-      if(callbackData === 'accept') {
+      if(callback_data === 'accept') {
         ctx.wizard.state.status = 'accept';
         ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE_HANDLER;
       }
-      if(callbackData === 'reject') {
+      if(callback_data === 'reject') {
         ctx.wizard.state.status = 'reject';
         ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE_HANDLER;
       }
-      ctx.wizard.state.pull_request_code_pagination.onPrevPage(callbackData, () => {
+      ctx.wizard.state.pull_request_code_pagination.onPrevPage(callback_data, () => {
         ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE;
       })
-      ctx.wizard.state.pull_request_code_pagination.onNextPage(callbackData, () => {
+      ctx.wizard.state.pull_request_code_pagination.onNextPage(callback_data, () => {
         ctx.wizard.state.nextScene = types.PULL_REQUEST_CODE;
       })
       

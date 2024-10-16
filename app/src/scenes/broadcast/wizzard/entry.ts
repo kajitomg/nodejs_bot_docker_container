@@ -1,14 +1,16 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import { ScenesTypes } from '../../index';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createEntryBroadcastScene = composeWizardScene(
   async (ctx) => {
@@ -32,9 +34,9 @@ export const createEntryBroadcastScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Получить текущее сообщение', createNextScene(types.GET), !admin),
-          Markup.button.callback('Создать новое сообщение', createNextScene(types.CREATE), !admin),
-          Markup.button.callback('Назад в меню', createNextScene(ScenesTypes.menu.wizard.SERVICES), !admin),
+          Markup.button.callback('Получить текущее сообщение', nextSceneHandler.create(types.GET), !admin),
+          Markup.button.callback('Создать новое сообщение', nextSceneHandler.create(types.CREATE), !admin),
+          Markup.button.callback('Назад в меню', nextSceneHandler.create(ScenesTypes.menu.wizard.SERVICES), !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Рассылка'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
@@ -44,14 +46,14 @@ export const createEntryBroadcastScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const sceneId = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     try {
-      if (sceneId) {
-        const nextScene = getNextScene(sceneId)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+          
+        })
       } else {
         await ctx.sendMessage('Вы вышли из Рассылки')
       }

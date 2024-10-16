@@ -1,17 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
 
-const variants = {
-  0:'Произошла ошибка при добавлении кода!',
-  1:'Код успешно добавлен!'
-}
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 export const createAddCodeEndDialogScene = composeWizardScene(
   async (ctx) => {
@@ -36,8 +34,8 @@ export const createAddCodeEndDialogScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), createNextScene(ctx.wizard.state.options.entry)),
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.create_new'), createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), nextSceneHandler.create(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.create_new'), nextSceneHandler.create(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     const text = genMessage({
@@ -63,10 +61,9 @@ export const createAddCodeEndDialogScene = composeWizardScene(
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     if (callback_data) {
-      const nextScene = getNextScene(callback_data)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+      })
     } else {
       await ctx.sendMessage(ctx.i18n.t('code_create.exit',{ menu_name: ctx.i18n.t('code_create.name',{ game_name:game.name }) }))
     }

@@ -1,12 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 export const createAddCodeNameScene = composeWizardScene(
   async (ctx) => {
@@ -31,7 +34,7 @@ export const createAddCodeNameScene = composeWizardScene(
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), createNextScene(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), nextSceneHandler.create(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     
@@ -50,18 +53,17 @@ export const createAddCodeNameScene = composeWizardScene(
   },
   async (ctx, done) => {
     const chatId = ctx.chat?.id;
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     const messageText = ctx.message?.text;
     
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined)
     
-    if (callback_query) {
-      const nextScene = getNextScene(callback_query)
-      if (nextScene) {
-        ctx.wizard.state.nextScene = nextScene;
-      }
+    if (callback_data) {
+      nextSceneHandler.on(callback_data, async (value) => {
+        ctx.wizard.state.nextScene = value;
+      })
     } else {
       if (ctx.wizard.state.code_content) {
         ctx.wizard.state.nextScene = types.ADD_CODE;

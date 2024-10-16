@@ -1,13 +1,15 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import { ScenesTypes } from '../../index';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createChangeLanguageEntryScene = composeWizardScene(
   async (ctx) => {
@@ -30,7 +32,7 @@ export const createChangeLanguageEntryScene = composeWizardScene(
         [
           Markup.button.callback(ctx.i18n.t('change_language.buttons.ru'), `${Languages.ru}`),
           Markup.button.callback(ctx.i18n.t('change_language.buttons.en'), `${Languages.en}`),
-          Markup.button.callback(ctx.i18n.t('change_language.buttons.back'), createNextScene(ScenesTypes.menu.wizard.PROFILE)),
+          Markup.button.callback(ctx.i18n.t('change_language.buttons.back'), nextSceneHandler.create(ScenesTypes.menu.wizard.PROFILE)),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold(ctx.i18n.t('change_language.name')),'\n\n',italic(ctx.i18n.t('change_language.data.choose_language'))), markup)
@@ -43,21 +45,20 @@ export const createChangeLanguageEntryScene = composeWizardScene(
   async (ctx, done) => {
     const author = ctx.from
     const chat_id = ctx.chat.id
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     try {
-      if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
         
-        if ( Languages.hasOwnProperty(callback_query) ) {
+        if ( Languages.hasOwnProperty(callback_data) ) {
           const user = await Slices.user.crud.create({ chat_id, username: author.username, first_name: author.first_name })
           
-          await Slices.user.crud.update({ chat_id, language: callback_query, username: author.username, firstName: author.first_name  })
+          await Slices.user.crud.update({ chat_id, language: callback_data, username: author.username, firstName: author.first_name  })
           
           ctx.wizard.state.nextScene = types.ENTRY;
         }

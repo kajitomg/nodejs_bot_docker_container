@@ -1,12 +1,14 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { Languages } from '../../../models/user/user-model';
 import Slices from '../../../slices';
 import { ScenesTypes } from '../../index';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createMenuProfileScene = composeWizardScene(
   async (ctx) => {
@@ -26,8 +28,8 @@ export const createMenuProfileScene = composeWizardScene(
       ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback(ctx.i18n.t('profile.buttons.change_language'), createNextScene(ScenesTypes.language.wizard.ENTRY)),
-          Markup.button.callback(ctx.i18n.t('profile.buttons.back'), createNextScene(ScenesTypes.menu.wizard.ENTRY)),
+          Markup.button.callback(ctx.i18n.t('profile.buttons.change_language'), nextSceneHandler.create(ScenesTypes.language.wizard.ENTRY)),
+          Markup.button.callback(ctx.i18n.t('profile.buttons.back'), nextSceneHandler.create(ScenesTypes.menu.wizard.ENTRY)),
         ],{ columns: 1 }
       )
       await send(ctx, fmt(bold(ctx.i18n.t('profile.name')),'\n\n',italic(ctx.i18n.t('profile.data.choose_action'))), markup)
@@ -37,16 +39,15 @@ export const createMenuProfileScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const sceneId = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     ctx.i18n.locale(ctx.scene.state?.options?.language)
     
     try {
-      if (sceneId) {
-        const nextScene = getNextScene(sceneId)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
       } else {
         await ctx.sendMessage(ctx.i18n.t('profile.exit', {menu_name: ctx.i18n.t('profile.name')}))
       }

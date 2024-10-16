@@ -44,8 +44,13 @@ userBot.on('message', async (ctx) => {
   try {
     const user = (await Slices.user.crud.get({ chat_id }))
     const language = Languages?.[user.item?.language] || 'ru'
+    console.log(ctx.message)
     //@ts-ignore
     ctx.i18n.locale(language)
+    //AgACAgIAAxkBAAIRCmcC9AABb-7SuSQDSeh59UFIhruM1gAC9eYxG-_4GUi4EeVeXsL3QgEAAwIAA3kAAzYE p1
+    //BAACAgIAAxkBAAIRDGcC9GgvFaJFY9kj7XO5SEeM0cVjAAJAYgAC7_gZSHkMuIma6m_ENgQ v1
+    //BAACAgIAAxkBAAIRGmcC93SSwVUAAcf4SZfUMMP0ERveMgACbWIAAu_4GUiUTOKkXZtIbjYE v2
+    
     //@ts-ignore
     ctx.sendMessage(ctx.i18n.t('unknown_command'))
   } catch (error) {

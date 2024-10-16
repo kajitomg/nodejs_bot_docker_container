@@ -1,14 +1,16 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, FmtString, italic } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { sleep } from '../../../helpers/sleep';
 import { Languages } from '../../../models/user/user-model';
 import { adminUsers } from '../../../routes/admin-routes';
 import Slices from '../../../slices';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createStartBroadcastScene = composeWizardScene(
   async (ctx) => {
@@ -33,8 +35,8 @@ export const createStartBroadcastScene = composeWizardScene(
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback('Запустить пост', 'start',!admin && !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
-          Markup.button.callback('Сменить пост', createNextScene(types.CREATE), !admin),
-          Markup.button.callback('Назад к списку действий', createNextScene(types.ENTRY), !admin)
+          Markup.button.callback('Сменить пост', nextSceneHandler.create(types.CREATE), !admin),
+          Markup.button.callback('Назад к списку действий', nextSceneHandler.create(types.ENTRY), !admin)
         ],{ columns: 2 }
       )
       if (ctx.wizard.state.broadcast?.forward) {
@@ -50,15 +52,15 @@ export const createStartBroadcastScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     
     try {
-      if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
-        if( callback_query === 'start' && (ctx.wizard.state.broadcast?.text?.value || ctx.wizard.state.broadcast?.forward)) {
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+          
+        })
+        if( callback_data === 'start' && (ctx.wizard.state.broadcast?.text?.value || ctx.wizard.state.broadcast?.forward)) {
           const author = ctx.from
           const msg = new FmtString(ctx.wizard.state.broadcast?.text?.value, ctx.wizard.state.broadcast?.text?.entities)
           const users = await Slices.user.crud.gets()

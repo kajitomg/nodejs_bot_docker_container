@@ -165,22 +165,91 @@ code_search:
 
 
 broadcast_entry:
-  name: ''
+  name: 'Broadcast'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+  buttons:
+    get_current_post: Get the current post
+    create_new_post: Create a new post
+    back: *back
 broadcast_create:
-  name: ''
+  name: 'Creating a broadcast post'
+  exit: *exit
+  data:
+    send_message: 'Send a message:'
+  buttons:
+    back: *back
 broadcast_get:
-  name: ''
+  name: 'Current post'
+  exit: *exit
+  data:
+    forward_message: 'Forwarded message ⬆'
+    warning_post_not_found: There is no post
+  buttons:
+    start_broadcast: Launch a broadcast
+    change_post: Change the post
+    back: *back
 broadcast_start:
-  name: ''
+  name: 'Launching the broadcast'
+  exit: *exit
+  data:
+    forward_message: 'Forwarded message ⬆'
+    warning_start_broadcast: Are you sure you want to launch a broadcast?
+    warning_post_not_found: There is no post
+  buttons:
+    start_broadcast: Launch a broadcast
+    change_post: Change the post
+    back_to: *back_to
 
-mandatory_subscription_create:
-  name: ''
 mandatory_subscription_entry:
-  name: ''
+  name: 'Mandatory subscription'
+  exit: *exit
+  buttons:
+    add_channel: Add a channel
+    list_channel: List of channels
+    back_to: *back_to
+mandatory_subscription_create:
+  name: 'Creating an MS channel'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+    name: Name
+    description: Description
+    id: ID
+    link: Link
+    warning_fill_all_fields: Fill in the required fields*
+    send_value: 'Send the «${value}»:'
+  buttons:
+    change: *change
+    create_channel: Launch a broadcast
+    back: *back
 mandatory_subscription_item:
-  name: ''
+  name: 'MS Channel'
+  exit: *exit
+  data:
+    choose_action: *choose_action
+    name: Name
+    description: Description
+    id: ID
+    link: Link
+    active: Active
+    on: On
+    off: Off
+    send_value: 'Send the «${value}»:'
+  buttons:
+    change: *change
+    create_channel: Launch a broadcast
+    back: *back
 mandatory_subscription_list:
-  name: ''
+  name: List of MS channels
+  exit: *exit
+  buttons:
+    back: *back
 mandatory_subscription_check:
-  name: ''
+  name: Subscribe to channels
+  exit: *exit
+  buttons:
+    check_subscription: Check subscriptions
+    back_to: *back_to
 

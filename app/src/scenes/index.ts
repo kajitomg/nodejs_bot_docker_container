@@ -6,6 +6,8 @@ import { BlumScenesTypes, BlumWizardScenes } from './blum';
 import { CodeScenesTypes, CodeWizardScenes } from './code';
 import { LanguageScenesTypes, LanguageWizardScenes } from './language';
 import { MandatorySubscriptionScenesTypes, MandatorySubscriptionWizardScenes } from './mandatory-subscription';
+import { ActivityTypes, ActivityWizardScenes } from './activity';
+import { PostScenesTypes, PostWizardScenes } from './post';
 
 export const WizardScenes = [
   ...MenuWizardScenes,
@@ -16,6 +18,8 @@ export const WizardScenes = [
   ...LanguageWizardScenes,
   ...MandatorySubscriptionWizardScenes,
   ...BroadcastWizardScenes,
+  ...ActivityWizardScenes,
+  ...PostWizardScenes
 ]
 
 export const ScenesTypes = {
@@ -27,4 +31,6 @@ export const ScenesTypes = {
   language: LanguageScenesTypes,
   mandatorySubscription: MandatorySubscriptionScenesTypes,
   broadcast: BroadcastScenesTypes,
+  activity: ActivityTypes,
+  post: PostScenesTypes
 }

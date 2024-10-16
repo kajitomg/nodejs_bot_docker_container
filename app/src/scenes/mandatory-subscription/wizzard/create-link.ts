@@ -1,12 +1,13 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import { HandlerError } from '../../../exceptions/api-error';
+import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
-import { createNextScene, getNextScene } from '../../../helpers/next-scene';
 import send from '../../../helpers/send';
 import { adminUsers } from '../../../routes/admin-routes';
-import { ScenesTypes } from '../../index';
 import types from './types';
+
+const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createCreateMandatoryChannelLinkScene = composeWizardScene(
   async (ctx) => {
@@ -17,7 +18,7 @@ export const createCreateMandatoryChannelLinkScene = composeWizardScene(
       
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Назад в меню', createNextScene(types.CREATE), !admin),
+          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.CREATE), !admin),
         ],{ columns: 2 }
       )
       const message = await send(ctx, fmt(
@@ -34,16 +35,16 @@ export const createCreateMandatoryChannelLinkScene = composeWizardScene(
   },
   async (ctx, done) => {
     const chatId = ctx.chat?.id;
-    const callback_query = ctx.update?.callback_query?.data;
+    const callback_data = ctx.update?.callback_query?.data;
     const message_text = ctx.message?.text;
     
     try {
       ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined)
-      if (callback_query) {
-        const nextScene = getNextScene(callback_query)
-        if (nextScene) {
-          ctx.wizard.state.nextScene = nextScene;
-        }
+      
+      if (callback_data) {
+        nextSceneHandler.on(callback_data, async (value) => {
+          ctx.wizard.state.nextScene = value;
+        })
       } else {
         if (!ctx.wizard.state.create_mandatory_channel.name) {
           ctx.wizard.state.nextScene = types.CREATE_NAME;
