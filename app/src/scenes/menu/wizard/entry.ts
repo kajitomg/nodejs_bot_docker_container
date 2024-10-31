@@ -4,9 +4,7 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import { adminUsers } from '../../../routes/admin-routes';
-import Slices from '../../../slices';
+import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
@@ -14,20 +12,8 @@ const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 export const createEntryScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
     try {
-      if(!language) {
-        const user = await Slices.user.crud.get({ chat_id })
-        language = Languages?.[user.item?.language] || 'ru'
-      }
-      
-      ctx.scene.state = {
-        options: {
-          language
-        }
-      }
-      ctx.i18n.locale(language)
-      const admin = adminUsers.includes(chat_id)
+      const admin = isAdmin(chat_id)
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback(ctx.i18n.t('menu.buttons.games'), nextSceneHandler.create(types.GAMES)),
@@ -42,22 +28,21 @@ export const createEntryScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
-    
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value, {test: 'test'})
         })
       } else {
         await ctx.sendMessage(ctx.i18n.t('menu.exit', {menu_name:ctx.i18n.t('menu.name')}))
+        await done()
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Главное меню', e))
     }
     
-    return done();
+    return;
   },
 );

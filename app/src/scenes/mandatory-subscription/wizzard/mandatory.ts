@@ -6,33 +6,21 @@ import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import checker from '../../../helpers/checker';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
 import { ScenesTypes } from '../../index';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createMandatoryChannelScene = composeWizardScene(
-  async (ctx) => {
+interface MandatoryProps {
+  next_scene: string,
+  data: Record<string, unknown>
+}
+
+export const createMandatoryChannelScene = composeWizardScene<MandatoryProps>(
+  async (ctx, done) => {
     const chat_id = ctx.chat.id
     
     try {
-      let language = ctx.scene.state?.options?.language
-      
-      if(!language) {
-        const user = await Slices.user.crud.get({ chat_id })
-        language = Languages?.[user.item?.language] || 'ru'
-      }
-      
-      if (ctx.wizard.state.options) {
-        ctx.wizard.state.options.language = language
-      } else {
-        ctx.wizard.state.options = {
-          language
-        }
-      }
-      ctx.i18n.locale(language)
       const channels = await mandatoryChannelController.getChannels({
         active: true
       })
@@ -72,9 +60,9 @@ export const createMandatoryChannelScene = composeWizardScene(
           }
         }
       }, ...channels.items)
-      
+      console.log(subscribe)
       if(subscribe) {
-        return await ctx.scene.enter(ctx.wizard.state.mandatory_channel_next, ctx.wizard.state)
+        return await done(ctx.scene.session.props.next_scene, ctx.scene.session.props.data)
       }
       
       const buttons = channels.items.map((channel) => Markup.button.url(`${channel.name} | ${channel.subscribe ? '✔️' :'❌'}`, channel.link))
@@ -83,7 +71,7 @@ export const createMandatoryChannelScene = composeWizardScene(
         [
           ...buttons,
           Markup.button.callback(ctx.i18n.t('mandatory_subscription_check.buttons.check_subscription'), nextSceneHandler.create(types.MANDATORY)),
-          Markup.button.callback(ctx.i18n.t('mandatory_subscription_check.buttons.back_to',{ menu_name: ctx.i18n.t('games.name') }), nextSceneHandler.create(ScenesTypes.menu.wizard.GAMES)),
+          Markup.button.callback(ctx.i18n.t('mandatory_subscription_check.buttons.back_to',{ menu_name: ctx.i18n.t('games.name') }), 'back_to'),
         ],{ columns: 1 }
       )
       await send(ctx, fmt(
@@ -94,20 +82,24 @@ export const createMandatoryChannelScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        if( callback_data === 'back_to' ){
+          await back(ScenesTypes.menu.wizard.GAMES);
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value, {...ctx.scene.session.props});
         })
       }  else {
         await ctx.sendMessage(ctx.i18n.t('mandatory_subscription_check.exit',{ menu_name: ctx.i18n.t('mandatory_subscription_check.name') }))
+        await done();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Проверки подписки ОП', e))
     }
-    return done();
+    return;
   },
 );

@@ -3,70 +3,62 @@ import { bold, fmt, italic } from 'telegraf/format';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
+import sendMessage from '../../../helpers/send-message';
+import { ICode } from '../../../models/code/code-model';
+import { Game } from '../../../models/game';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
-const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
-export const createAddCodeEndDialogScene = composeWizardScene(
+interface CodeCreateEndDialogProps {
+  game: Game,
+  code: Partial<Pick<ICode, 'name' | 'content'>>,
+  result: number,
+  entry: string,
+}
+
+export const createAddCodeEndDialogScene = composeWizardScene<CodeCreateEndDialogProps>(
   async (ctx) => {
-    const game = ctx.wizard.state.options.game
-    
-    const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
-    
-    if(!language) {
-      const user = await Slices.user.crud.get({ chat_id })
-      language = Languages?.[user.item?.language] || 'ru'
-    }
-    
-    if (ctx.wizard.state.options) {
-      ctx.wizard.state.options.language = language
-    } else {
-      ctx.wizard.state.options = {
-        language
-      }
-    }
-    ctx.i18n.locale(language)
+    const game = ctx.scene.session?.props?.game
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), nextSceneHandler.create(ctx.wizard.state.options.entry)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back_to',{ menu_name: ctx.i18n.t('game.name',{ game_name: game.name }) }), 'back_to'),
         Markup.button.callback(ctx.i18n.t('code_create.buttons.create_new'), nextSceneHandler.create(types.ADD_CODE)),
       ],{ columns: 2 }
     )
     const text = genMessage({
       header: genMessage({
         header: bold(ctx.i18n.t('code_create.name',{ game_name:game.name })),
-        body: italic(ctx.i18n.t(`code_create.data.warning_end_dialog.${ctx.wizard.state.add_code_result}`)),
+        body: italic(ctx.i18n.t(`code_create.data.warning_end_dialog.${ctx.scene.session?.props.result}`)),
       }),
-      body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+      body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.name')}${ctx.scene.session?.props.code.name ? '' : '*'}: `), bold(ctx.scene.session?.props.code.name ? ctx.scene.session?.props.code.name : '-'),fmt('\n\n'),fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.scene.session?.props.code.content ? '' : '*'}: `), bold(ctx.scene.session?.props.code.content ? ctx.scene.session?.props.code.content : '-')),
     })
     
-    await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
-    
-    delete ctx.wizard.state?.code_name
-    delete ctx.wizard.state?.code_content
-    delete ctx.wizard.state?.add_code_result
+    await sendMessage(ctx, {
+      text,
+      extra: markup
+    })
     
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const game = ctx.wizard.state.options.game
-    const callback_data = ctx.update?.callback_query?.data;
-    
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
+  async (ctx, done, back) => {
+    const game = ctx.scene.session?.props?.game
+    const callback_data = ctx.callbackQuery?.['data'];
     
     if (callback_data) {
-      nextSceneHandler.on(callback_data, async (value) => {
-        ctx.wizard.state.nextScene = value;
+      if (callback_data === 'back_to') {
+        await back(ctx.scene.session.props.entry)
+      }
+      await nextSceneHandler.on(callback_data, async (value) => {
+        await done(value, {
+          game
+        });
       })
     } else {
       await ctx.sendMessage(ctx.i18n.t('code_create.exit',{ menu_name: ctx.i18n.t('code_create.name',{ game_name:game.name }) }))
+      await done();
     }
-    return done();
+    return;
   },
 );

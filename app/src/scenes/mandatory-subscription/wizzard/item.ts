@@ -5,28 +5,30 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { adminUsers } from '../../../routes/admin-routes';
+import { IMandatoryChannel } from '../../../models/mandatory-channel/mandatory-channel';
+import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const updateChannelHandler = new CallbackQueryWrapper('update_channel')
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createItemMandatoryChannelScene = composeWizardScene(
+interface MandatoryItemProps {
+  channel_id: number,
+  channel?: Partial<IMandatoryChannel>,
+}
+
+export const createItemMandatoryChannelScene = composeWizardScene<MandatoryItemProps>(
   async (ctx) => {
     try {
       const chat_id = ctx.chat.id
       
-      const admin = adminUsers.includes(chat_id)
-      const item = await mandatoryChannelController.getChannel({
-        id: ctx.wizard.state?.mandatory_channel_item?.id
-      })
+      const admin = isAdmin(chat_id)
+      const channel = (await mandatoryChannelController.getChannel({
+        id: ctx.scene.session.props?.channel_id
+      })).item
       
-      ctx.wizard.state.item_mandatory_channel = {
-        id: item.item.channel_id,
-        link: item.item.link,
-        name: item.item.name,
-        description: item.item.description,
-        active: item.item.active,
+      ctx.scene.session.props.channel = {
+        ...channel.dataValues
       }
       
       const markup = Markup.inlineKeyboard(
@@ -35,49 +37,57 @@ export const createItemMandatoryChannelScene = composeWizardScene(
           Markup.button.callback('Изменить описание', updateChannelHandler.create('description'), !admin),
           Markup.button.callback('Изменить ID', updateChannelHandler.create('channel_id'), !admin),
           Markup.button.callback('Изменить ссылку', updateChannelHandler.create('link'), !admin),
-          Markup.button.callback(item.item.active ? 'Выключить' : 'Включить', updateChannelHandler.create('active'), !admin),
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.LIST), !admin),
+          Markup.button.callback(channel.active ? 'Выключить' : 'Включить', 'active', !admin),
+          Markup.button.callback('Назад в меню', 'back', !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(
         bold('Меню Канал ОП'),'\n\n',
-        bold(`Название: ${item.item?.name || '-'}`),'\n\n',
-        bold(`Описание: ${item.item?.description || '-'}`),'\n\n',
-        bold(`ID: ${item.item?.channel_id || '-'}`),'\n\n',
-        bold(`Активирован: ${item.item?.active ? '✔️' :'❌'}`),'\n\n',
-        bold(`Ссылка: ${item.item?.link || '-'}`)
+        bold(`Название: ${channel?.name || '-'}`),'\n\n',
+        bold(`Описание: ${channel?.description || '-'}`),'\n\n',
+        bold(`ID: ${channel?.channel_id || '-'}`),'\n\n',
+        bold(`Активирован: ${channel?.active ? '✔️' :'❌'}`),'\n\n',
+        bold(`Ссылка: ${channel?.link || '-'}`)
       ), markup)
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Канал ОП', e))
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_query = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_query = ctx.callbackQuery?.['data'];
+    const channel = ctx.scene.session.props.channel
     
     try {
       if (callback_query) {
+        if( callback_query === 'back' ){
+          await back();
+        }
+        if( callback_query === 'active' ) {
+          await mandatoryChannelController.updateChannel({
+            id: channel?.id,
+            active: !channel.active
+          })
+          await done(types.ITEM, {
+            channel_id: ctx.scene.session.props.channel_id
+          });
+        }
         await nextSceneHandler.on(callback_query, async (value) => {
-          ctx.wizard.state.nextScene = value;
+          await done(value);
         })
         await updateChannelHandler.on(callback_query, async (value) => {
-          ctx.wizard.state.item_mandatory_channel_update = value
-          ctx.wizard.state.nextScene = types.ITEM_UPDATE;
-          if(value === 'active') {
-            await mandatoryChannelController.updateChannel({
-              id: ctx.wizard.state?.mandatory_channel_item?.id,
-              [ctx.wizard.state.item_mandatory_channel_update]: !ctx.wizard.state.item_mandatory_channel.active
-            })
-            ctx.wizard.state.nextScene = types.ITEM;
-            delete ctx.wizard.state.item_mandatory_channel_update
-          }
+          await done(types.ITEM_UPDATE, {
+            field_name: value,
+            channel
+          })
         })
       }  else {
         await ctx.sendMessage('Вы вышли из Меню Канал ОП')
+        await done();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Канал ОП', e))
     }
-    return done();
+    return;
   },
 );

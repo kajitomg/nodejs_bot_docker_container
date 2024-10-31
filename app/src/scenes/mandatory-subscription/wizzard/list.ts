@@ -5,7 +5,7 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { adminUsers } from '../../../routes/admin-routes';
+import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
@@ -16,13 +16,13 @@ export const createListMandatoryChannelScene = composeWizardScene(
     try {
       const chat_id = ctx.chat.id
       
-      const admin = adminUsers.includes(chat_id)
+      const admin = isAdmin(chat_id)
       const list = await mandatoryChannelController.getChannels()
       
       const markup = Markup.inlineKeyboard(
         [
           ...list.items.map((channel) => Markup.button.callback(`${channel.name} | ${channel.active ? '✔️' :'❌'}`, goToChannelHandler.create(channel.id), !admin)),
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.ENTRY), !admin),
+          Markup.button.callback('Назад в меню', 'back', !admin),
         ],{ columns: 1 }
       )
       await send(ctx, fmt(
@@ -34,26 +34,26 @@ export const createListMandatoryChannelScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
-        })
-        goToChannelHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.mandatory_channel_item = {
-            id: value
-          }
-          ctx.wizard.state.nextScene = types.ITEM;
+        if (callback_data === 'back') {
+          await back();
+        }
+        await goToChannelHandler.on(callback_data, async (value) => {
+          await done(types.ITEM, {
+            channel_id: value
+          });
         })
       }  else {
         await ctx.sendMessage('Вы вышли из сцены Список каналов ОП')
+        await done();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Список каналов ОП', e))
     }
-    return done();
+    return;
   },
 );

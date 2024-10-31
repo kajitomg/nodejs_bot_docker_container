@@ -10,7 +10,6 @@ import { createGiveCodeContentScene } from './suggest-content';
 import { createGiveCodeEndDialogScene } from './suggest-end-dialog';
 import { createGiveCodeNameScene } from './suggest-name';
 import { createPullRequestCodeScene } from './moderate';
-import { createPullRequestCodeHandlerScene } from './moderate-handler';
 import { createSearchCodesScene } from './search';
 import types from './types';
 
@@ -30,5 +29,4 @@ export const WizardScenes = [
   createGetAllCodesScene(types.GET_ALL_CODES, (ctx) => ctx.wizard.state.nextScene),
   createSearchCodesScene(types.SEARCH_CODES, (ctx) => ctx.wizard.state.nextScene),
   createPullRequestCodeScene(types.PULL_REQUEST_CODE, (ctx) => ctx.wizard.state.nextScene),
-  createPullRequestCodeHandlerScene(types.PULL_REQUEST_CODE_HANDLER, (ctx) => ctx.wizard.state.nextScene)
 ]

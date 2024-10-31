@@ -1,43 +1,30 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
 import postController from '../../../controllers/post-controller';
-import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
+import sendMessage from '../../../helpers/send-message';
+import { Post } from '../../../models/post/post-model';
 import types from './types';
 
-const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
+interface PostVariableUpdateProps {
+  post_id: number,
+  variable_name: string,
+  post?: Post
+}
 
-export const createCreateVariablePostTemplateScene = composeWizardScene(
+export const createCreateVariablePostTemplateScene = composeWizardScene<PostVariableUpdateProps>(
   async (ctx) => {
     const post = (await postController.getPost({
-      id: ctx.wizard.state.body_id
+      id: ctx.scene.session.props.post_id
     })).item
-    const variable = post.variables.find((item) => item.name === ctx.wizard.state.variable)
+    ctx.scene.session.props.post = post
     
-    const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
-    
-    if(!language) {
-      const user = await Slices.user.crud.get({ chat_id })
-      language = Languages?.[user.item?.language] || 'ru'
-    }
-    
-    if (ctx.wizard.state.options) {
-      ctx.wizard.state.options.language = language
-    } else {
-      ctx.wizard.state.options = {
-        language
-      }
-    }
-    ctx.i18n.locale(language)
-    
+    const variable = post.variables.find((item) => item.name === ctx.scene.session.props.variable_name)
+   
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback('Назад', nextSceneHandler.create(types.VARIABLES_LIST)),
+        Markup.button.callback('Назад', 'back'),
       ],{ columns: 2 }
     )
     
@@ -49,46 +36,36 @@ export const createCreateVariablePostTemplateScene = composeWizardScene(
       body: italic('Отправьте значение переменной:'),
     })
     
-    const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
-    //@ts-ignore
-    ctx.wizard.state.delete_message_id = message?.message_id
+    await sendMessage(ctx, {
+      text,
+      extra: markup,
+    })
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const chatId = ctx.chat?.id;
-    const callback_data = ctx.update?.callback_query?.data;
-    const messageText = ctx.message?.text;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
+    const messageText = ctx.message?.['text'];
+    const post = ctx.scene.session.props.post
     
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
-    
-    ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined)
+    await sendMessage(ctx, {}, {clear_markup: true})
     
     if (callback_data) {
-      nextSceneHandler.on(callback_data, async (value) => {
-        ctx.wizard.state.nextScene = value;
-      })
+      if (callback_data === 'back' ) {
+        await back();
+      }
     } else {
-      const post = (await postController.getPost({
-        id: ctx.wizard.state.body_id
-      })).item
-      const index = post.variables.findIndex((item) => item.name === ctx.wizard.state.variable)
-      console.log(index,ctx.wizard.state.post)
+      const index = post.variables.findIndex((item) => item.name === ctx.scene.session.props.variable_name)
       const variables = [
         ...post.variables
       ]
       variables[index].value = messageText
-      console.log(variables)
       await postController.updatePost({
-        id: ctx.wizard.state.body_id,
+        id: ctx.scene.session.props.post_id,
         variables
       })
-      ctx.wizard.state.nextScene = types.VARIABLES_LIST;
+      await back(types.VARIABLES_LIST);
     }
     
-    if (ctx.wizard.state.warning) {
-      delete ctx.wizard.state.warning;
-    }
-    
-    return done();
+    return;
   },
 );

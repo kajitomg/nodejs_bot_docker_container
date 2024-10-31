@@ -4,46 +4,38 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import { adminUsers } from '../../../routes/admin-routes';
-import Slices from '../../../slices';
+import { MessageEntity } from '../../../models/post/post-model';
+import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createGetBroadcastScene = composeWizardScene(
+interface BroadcastGetProps {
+  text: { value: string, entities: MessageEntity[] },
+  forward: { chat_id: number, message_id: number }
+}
+
+export const createGetBroadcastScene = composeWizardScene<BroadcastGetProps>(
   async (ctx) => {
     const chat_id = ctx.chat.id
     
-    const admin = adminUsers.includes(chat_id)
-    let language = ctx.scene.state?.options?.language
+    const admin = isAdmin(chat_id)
     try {
-      if(!language) {
-        const user = await Slices.user.crud.get({ chat_id })
-        language = Languages?.[user.item?.language] || 'ru'
-      }
-      
-      ctx.scene.state = {
-        ...ctx.scene.state,
-        options: {
-          ...ctx.scene.state.options,
-          language
-        }
-      }
-      ctx.i18n.locale(language)
+
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Запустить пост', nextSceneHandler.create(types.START),!admin && !ctx.wizard.state.broadcast?.text && !ctx.wizard.state.broadcast?.forward),
+          Markup.button.callback('Запустить пост', nextSceneHandler.create(types.START),!admin || (!ctx.scene.session.props?.text && !ctx.scene.session.props?.forward)),
           Markup.button.callback('Сменить пост', nextSceneHandler.create(types.CREATE), !admin),
-          Markup.button.callback('Назад к списку действий', nextSceneHandler.create(types.ENTRY), !admin)
+          Markup.button.callback('Назад к списку действий', 'back_to', !admin)
         ],{ columns: 2 }
       )
-      if (ctx.wizard.state.broadcast?.forward) {
-        await ctx.forwardMessage(chat_id, {from_chat_id: ctx.wizard.state.broadcast?.forward.chat, message_id: ctx.wizard.state.broadcast?.forward.message })
+      if (ctx.scene.session.props?.forward) {
+        // @ts-ignore
+        await ctx.forwardMessage(chat_id, { from_chat_id: ctx.scene.session.props?.forward.chat_id, message_id: ctx.scene.session.props?.forward.message_id })
         await send(ctx, fmt(bold('Текущий пост'),'\n\n',italic('Пересланное сообщение ⬆')),markup)
-      } else if (ctx.wizard.state.broadcast?.text) {
-        const msg = new FmtString(ctx.wizard.state.broadcast?.text?.value, ctx.wizard.state.broadcast?.text?.entities)
-        await send(ctx, fmt(bold('Текущий пост'),'\n\n',ctx.wizard.state.broadcast?.text?.value ? msg : 'Нет поста'),markup)
+      } else if (ctx.scene.session.props?.text) {
+        const msg = new FmtString(ctx.scene.session.props?.text?.value, ctx.scene.session.props?.text?.entities)
+        await send(ctx, fmt(bold('Текущий пост'),'\n\n',ctx.scene.session.props?.text?.value ? msg : 'Нет поста'),markup)
       } else {
         await send(ctx, fmt(bold('Текущий пост'),'\n\n','Нет поста'),markup)
         
@@ -53,22 +45,27 @@ export const createGetBroadcastScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
-          
+        if (callback_data === 'back_to') {
+          await back(types.ENTRY);
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value, {
+            ...ctx.scene.session.props
+          });
         })
       } else {
         await ctx.sendMessage('Вы вышли из Меню Рассылки сообщений')
+        await done();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню Рассылки сообщений', e))
     }
     
-    return done();
+    return;
   },
 );

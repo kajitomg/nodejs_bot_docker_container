@@ -36,16 +36,24 @@ export default {
       console.error(new HandlerError(400, `Ошибка при создании шаблона поста`, error))
     }
   },
-  async createBody(data: createDataType) {
+  async createBody(data: {template_id: number} & Partial<Pick<createDataType, 'name' | 'variables'>>) {
     try {
       const type = PostTypes.BODY
       
       const code = await controllerWrapper(
         async (transaction) => {
+          const { id, media, name, variables, type: t, ...postData }: Post = (await this.getPost({id: data.template_id})).item.dataValues
+
+          if (!postData) {
+            return console.error(new HandlerError(400, `Ошибка при поиске поста`))
+          }
+          
           return await postSlices.crud.create({
             data: {
               type,
-              ...data
+              name: data.name || name,
+              variables: data.variables || variables,
+              ...postData,
             },
             options: { transaction }
           })
@@ -58,16 +66,22 @@ export default {
       console.error(new HandlerError(400, `Ошибка при создании поста`, error))
     }
   },
-  async createPost(data: createDataType) {
+  async createPost(data: { body_id: number } & Partial<Pick<createDataType, 'name'>>) {
     try {
       const type = PostTypes.POST
       
       const code = await controllerWrapper(
         async (transaction) => {
+          const { id, name, type: t, ...postData }: Post = (await this.getPost({id: data.body_id})).item.dataValues
+          if (!postData) {
+            return console.error(new HandlerError(400, `Ошибка при поиске поста`))
+          }
+          
           return await postSlices.crud.create({
             data: {
               type,
-              ...data
+              name: data.name || name,
+              ...postData
             },
             options: { transaction }
           })
@@ -76,6 +90,29 @@ export default {
       )
       
       return code
+    } catch (error) {
+      console.error(new HandlerError(400, `Ошибка при создании поста`, error))
+    }
+  },
+  
+  async createCopiedBodyPost(data: { body_id: number, post_name?: string }) {
+    try {
+      const post = await controllerWrapper(
+        async () => {
+          const post = await this.createPost({
+            body_id: data.body_id,
+            name: data.post_name
+          })
+          await this.deletePost({
+            id: data.body_id
+          })
+          
+          return post
+        },
+        (error) => new HandlerError(400, `Ошибка при создании поста`, error)
+      )
+      
+      return post
     } catch (error) {
       console.error(new HandlerError(400, `Ошибка при создании поста`, error))
     }

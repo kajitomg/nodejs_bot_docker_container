@@ -1,49 +1,44 @@
 import { Markup } from 'telegraf';
 import { bold, code, fmt, FmtString, italic } from 'telegraf/format';
 import codeController from '../../../controllers/code-controller';
-import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import createListMessage from '../../../helpers/create-list-message';
 import { createMessageSample, genMessage } from '../../../helpers/create-message-sample';
 import MarkupPagination from '../../../helpers/markup-pagination';
-import send from '../../../helpers/send';
+import sendMessage from '../../../helpers/send-message';
 import { CodeStatuses } from '../../../models/code';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
+import { Game } from '../../../models/game';
 import types from './types';
-
-const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
-const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
 const limit = 25
 
-export const createSearchCodesScene = composeWizardScene(
+interface CodeSearchProps {
+  game: Game,
+  pagination?: MarkupPagination,
+  sample?: createMessageSample<{page?: number, max_pages?: number, content?: FmtString}>,
+  count: number,
+  count_prev: number,
+  force_update: boolean,
+  need_update: boolean,
+  search_query: string,
+}
+
+export const createSearchCodesScene = composeWizardScene<CodeSearchProps>(
   async (ctx) => {
-    const game = ctx.wizard.state.options.game
+    const game = ctx.scene.session?.props?.game
     
-    const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
-    
-    if(!language) {
-      const user = await Slices.user.crud.get({ chat_id })
-      language = Languages?.[user.item?.language] || 'ru'
-    }
-    
-    if (ctx.wizard.state.options) {
-      ctx.wizard.state.options.language = language
-    } else {
-      ctx.wizard.state.options = {
-        language
-      }
-    }
-    ctx.i18n.locale(language)
-    
-    ctx.wizard.state.search_codes_pagination = ctx.wizard.state.search_codes_pagination || new MarkupPagination(1, 1)
-    ctx.wizard.state.search_codes_message_sample = ctx.wizard.state.search_codes_message_sample || new createMessageSample({
+    ctx.scene.session.props.pagination = new MarkupPagination(
+      ctx.scene.session.props.pagination?._page || 1,
+      ctx.scene.session.props.pagination?._maxPages || 1,
+      ctx.scene.session.props.pagination?.prevMaxPages,
+      ctx.scene.session.props.pagination?.prevPage
+    )
+    ctx.scene.session.props.sample = new createMessageSample({
       content_wait: fmt(ctx.i18n.t('code_search.data.loader')),
       data: {
-        page: ctx.wizard.state.search_codes_pagination.page,
-        max_pages: ctx.wizard.state.search_codes_pagination.maxPages,
+        page: ctx.scene.session.props.pagination.page || ctx.scene.session.props.sample?._data.page,
+        max_pages: ctx.scene.session.props.pagination.maxPages || ctx.scene.session.props.sample?._data.max_pages,
+        ...(ctx.scene.session.props.sample?._data.content && {content: new FmtString(ctx.scene.session.props.sample?._data.content.text, ctx.scene.session.props.sample?._data.content.entities)}),
       },
       sample: (data?:{
         page?: number,
@@ -52,10 +47,10 @@ export const createSearchCodesScene = composeWizardScene(
       }) => {
         const markup = Markup.inlineKeyboard(
           [
-            ctx.wizard.state.search_codes_pagination.prevPageButton(),
+            ctx.scene.session.props.pagination?.prevPageButton(),
             Markup.button.callback(`${data?.page || '*'}/${data?.max_pages || data?.page || '*'}(↻)`, 'force_update'),
-            ctx.wizard.state.search_codes_pagination.nextPageButton(),
-            Markup.button.callback(ctx.i18n.t('code_search.buttons.back'), nextSceneHandler.create(ctx.wizard.state.options.entry)),
+            ctx.scene.session.props.pagination?.nextPageButton(),
+            Markup.button.callback(ctx.i18n.t('code_search.buttons.back'), 'back'),
           ],{ columns: 3 }
         )
         
@@ -64,110 +59,126 @@ export const createSearchCodesScene = composeWizardScene(
           ...(data.content && {body: data.content}),
           footer: italic(ctx.i18n.t('code_search.data.warning_fill_video_name'))
         })
-        
         return {
           text,
           reply_markup: markup.reply_markup
         }
       }
     })
-    ctx.wizard.state.search_codes_message_sample.is_loading = true
-    const message = await send(ctx, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup, parse_mode: 'MarkdownV2' })
-    //@ts-ignore
-    ctx.wizard.state.delete_message_id = message?.message_id
+    ctx.scene.session.props.sample.is_loading = true
+    await sendMessage(ctx, {
+      text: ctx.scene.session.props.sample.result.text,
+      extra: {
+        reply_markup: ctx.scene.session.props.sample.result.reply_markup
+      }
+    })
     
     const count = await codeController.getCount({
       game: game.id,
       status: CodeStatuses.accept
     }, {
-      search: ctx.wizard.state.search_codes_search_query || true
+      search: ctx.scene.session.props.search_query || 'false'
     })
     
-    ctx.wizard.state.search_codes_count_prev = ctx.wizard.state.search_codes_count
-    ctx.wizard.state.search_codes_count = count.count
-    ctx.wizard.state.search_codes_pagination.maxPages = Math.ceil(count.count / limit) || 1
+    ctx.scene.session.props.count_prev = ctx.scene.session.props.count
+    ctx.scene.session.props.count = count.count
+    ctx.scene.session.props.pagination.maxPages = Math.ceil(count.count / limit) || 1
     
-    const isNeedUpdate = ctx.wizard.state.need_update || (!ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevPage !== ctx.wizard.state.search_codes_pagination.page)) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_pagination.prevMaxPages !== ctx.wizard.state.search_codes_pagination.maxPages) || (ctx.wizard.state.search_codes_force_update && (ctx.wizard.state.search_codes_count_prev !== ctx.wizard.state.search_codes_count) && (ctx.wizard.state.search_codes_pagination.maxPages === ctx.wizard.state.search_codes_pagination.page)))
+    const isNeedUpdate = ctx.scene.session.props.need_update || (!ctx.scene.session.props.force_update && (ctx.scene.session.props.pagination.prevPage !== ctx.scene.session.props.pagination.page)) || (ctx.scene.session.props.force_update && (ctx.scene.session.props.pagination.prevMaxPages !== ctx.scene.session.props.pagination.maxPages) || (ctx.scene.session.props.force_update && (ctx.scene.session.props.count_prev !== ctx.scene.session.props.count) && (ctx.scene.session.props.pagination.maxPages === ctx.scene.session.props.pagination.page)))
  
     if (isNeedUpdate) {
  
-      const codes = await codeController.getCodes({
+      const codes = (await codeController.getCodes({
         game: game.id,
         status: CodeStatuses.accept
       },{
-        page: ctx.wizard.state.search_codes_pagination.page,
+        page: ctx.scene.session.props.pagination.page,
         limit,
-        search: ctx.wizard.state.search_codes_search_query || true
-      })
+        search: ctx.scene.session.props.search_query || 'false'
+      })).items
       
-      const text = codes?.items?.length > 0 ? genMessage({
+      const text = codes?.length > 0 ? genMessage({
         body: genMessage({
-          ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.wizard.state.search_codes_search_query}))}),
+          ...(ctx.scene.session.props.search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.scene.session.props.search_query}))}),
           //@ts-ignore
-          body: createListMessage({ list: codes.items, convertFn: (key, i) => fmt( (ctx.wizard.state.search_codes_pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
+          body: createListMessage({ list: codes, convertFn: (key, i) => fmt( (ctx.scene.session.props.pagination.page - 1) * limit + (i + 1), '. ', key.name, ': ', code(key.content) )},),
           footer: italic(ctx.i18n.t('code_search.data.warning_to_copy_click_on_code'))
         }),
-        footer: bold(`${ctx.i18n.t('code_search.data.codes_pagination')} `,(ctx.wizard.state.search_codes_pagination.page - 1) * limit + 1,'-',(ctx.wizard.state.search_codes_pagination.page - 1) * limit + codes.items?.length, ' / ', ctx.wizard.state.search_codes_count) ,
-      }) : ctx.wizard.state.search_codes_search_query ? genMessage({
-        ...(ctx.wizard.state.search_codes_search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.wizard.state.search_codes_search_query}))}),
+        footer: bold(`${ctx.i18n.t('code_search.data.codes_pagination')} `,(ctx.scene.session.props.pagination.page - 1) * limit + 1,'-',(ctx.scene.session.props.pagination.page - 1) * limit + codes?.length, ' / ', ctx.scene.session.props.count) ,
+      }) : ctx.scene.session.props.search_query ? genMessage({
+        ...(ctx.scene.session.props.search_query && { header: italic(ctx.i18n.t('code_search.data.codes_list', { code_name: ctx.scene.session.props.search_query}))}),
         body: italic(ctx.i18n.t('code_search.data.warning_codes_not_found'))
       }) : fmt('')
       
-      ctx.wizard.state.search_codes_message_sample.data = {
+      ctx.scene.session.props.sample.data = {
         content: text,
-        max_pages: ctx.wizard.state.search_codes_pagination.maxPages,
-        page: ctx.wizard.state.search_codes_pagination.page
+        max_pages: ctx.scene.session.props.pagination.maxPages,
+        page: ctx.scene.session.props.pagination.page
       }
-      ctx.wizard.state.search_codes_message_sample.is_loading = false
+      ctx.scene.session.props.sample.is_loading = false
       
-      //@ts-ignore
-      await ctx.telegram.editMessageText(ctx.chat.id, message?.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup})
+      await sendMessage(ctx, {
+        text: ctx.scene.session.props.sample.result.text,
+        extra: {
+          reply_markup: ctx.scene.session.props.sample.result.reply_markup
+        }
+      }, {edit_message: true})
+    }
+    if (ctx.scene.session.props.force_update) {
+      ctx.scene.session.props.force_update = false
+    }
+    if (ctx.scene.session.props.sample.is_loading) {
+      ctx.scene.session.props.sample.is_loading = false
       
-    }
-    if (ctx.wizard.state.search_codes_force_update) {
-      ctx.wizard.state.search_codes_force_update = false
-    }
-    if (ctx.wizard.state.search_codes_message_sample.is_loading) {
-      ctx.wizard.state.search_codes_message_sample.is_loading = false
-      //@ts-ignore
-      await ctx.telegram.editMessageText(ctx.chat.id, message?.message_id, undefined, ctx.wizard.state.search_codes_message_sample.result.text, { reply_markup: ctx.wizard.state.search_codes_message_sample.result.reply_markup })
-    }
-    ctx.wizard.state.need_update = false
+      await sendMessage(ctx, {
+        text: ctx.scene.session.props.sample.result.text,
+        extra: {
+          reply_markup: ctx.scene.session.props.sample.result.reply_markup
+        }
+      }, {edit_message: true})
+     }
+    ctx.scene.session.props.need_update = false
     
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const chatId = ctx.chat?.id;
-    const callback_data = ctx.update?.callback_query?.data;
-    const messageText = ctx.message?.text;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
     
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
-    
-    ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined, undefined)
+    ctx.scene.session.props.pagination = new MarkupPagination(
+      ctx.scene.session.props.pagination?._page || 1,
+      ctx.scene.session.props.pagination?._maxPages || 1,
+      ctx.scene.session.props.pagination?.prevMaxPages,
+      ctx.scene.session.props.pagination?.prevPage
+    )
+    await sendMessage(ctx, {}, {clear_markup: true})
     
     if (callback_data) {
-      nextSceneHandler.on(callback_data, async (value) => {
-        ctx.wizard.state.nextScene = value;
-      })
-      ctx.wizard.state.search_codes_pagination.onPrevPage(callback_data, () => {
-        ctx.wizard.state.nextScene = types.SEARCH_CODES;
-      })
+      await ctx.scene.session.props.pagination.onPrevPage(callback_data, async () => {})
+      await ctx.scene.session.props.pagination.onNextPage(callback_data, async () => {})
+      await done(types.SEARCH_CODES, {
+        ...ctx.scene.session.props
+      });
       if (callback_data === 'force_update') {
-        ctx.wizard.state.search_codes_force_update = true
-        ctx.wizard.state.nextScene = types.SEARCH_CODES;
+        await done(types.SEARCH_CODES, {
+          ...ctx.scene.session.props,
+          force_update: true
+        });
       }
-      ctx.wizard.state.search_codes_pagination.onNextPage(callback_data, () => {
-        ctx.wizard.state.nextScene = types.SEARCH_CODES;
-      })
+      if (callback_data === 'back') {
+        await back();
+      }
     } else {
+      delete ctx.scene.session.props.sample
+      delete ctx.scene.session.props.pagination
       
-      delete ctx.wizard.state.search_codes_message_sample
-      ctx.wizard.state.nextScene = types.SEARCH_CODES;
-      ctx.wizard.state.need_update = true
-      ctx.wizard.state.search_codes_search_query = messageText;
-      
+      await done(types.SEARCH_CODES, {
+        ...ctx.scene.session.props,
+        need_update: true,
+        search_query: message_text
+      });
     }
     
-    return done();
+    return;
   },
 );

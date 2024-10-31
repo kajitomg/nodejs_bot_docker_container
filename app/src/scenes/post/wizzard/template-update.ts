@@ -9,14 +9,17 @@ import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createWizardPostTemplateUpdate = composeWizardScene(
+interface PostTemplateUpdateProps {
+}
+/*
+export const createWizardPostTemplateUpdate = composeWizardScene<PostTemplateUpdateProps>(
   async (ctx) => {
     if (!ctx.wizard.state.post_template) ctx.wizard.state.post_template = {}
     
     try {
       const markup = Markup.inlineKeyboard(
         [
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(types.ENTRY)),
+          Markup.button.callback('Назад в меню', 'back'),
         ],{ columns: 2 }
       )
       
@@ -50,18 +53,18 @@ export const createWizardPostTemplateUpdate = composeWizardScene(
       console.error(new HandlerError(400, 'Ошибка: Сцена создания шаблона поста', e))
     }
   },
-  async (ctx, done) => {
-    const callback_data = ctx.callbackQuery?.data;
-    const message_text = ctx.message?.text;
-    const message_entities = ctx.message?.entities
-    console.log(callback_data)
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
+    const message_entities = ctx.message?.['entities']
+    
     try {
       await sendMessage(ctx, {}, {clear_markup: true})
       
       if (callback_data) {
-        await nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
-        })
+        if( callback_data === 'back' ) {
+          await back();
+        }
       } else {
         const reg = new RegExp(`{{([^}]+)}}`, 'g')
         const variables = message_text.match(reg)?.map((value) => ({name: value.substring(2, value.length - 2)}))
@@ -79,6 +82,6 @@ export const createWizardPostTemplateUpdate = composeWizardScene(
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Создание шаблона поста', e))
     }
-    return done();
+    return;
   },
-)
+)*/

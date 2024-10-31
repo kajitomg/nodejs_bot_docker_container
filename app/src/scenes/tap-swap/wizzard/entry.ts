@@ -1,48 +1,34 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
+import ActivityController from '../../../controllers/activity-controller';
 import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import sendMessage from '../../../helpers/send-message';
-import { GamesData } from '../../../models/game';
-import { Languages } from '../../../models/user/user-model';
-import { adminUsers } from '../../../routes/admin-routes';
-import Slices from '../../../slices';
+import { Game, GamesData } from '../../../models/game';
+import { isAdmin } from '../../../routes/admin-routes';
 import { ScenesTypes } from '../../index';
-import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 const goToActivityHandler = new CallbackQueryWrapper('goto_activity')
 
 const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
 
-export const createEntryScene = composeWizardScene(
+interface TapSwapEntryProps {
+  game: Game,
+}
+
+export const createEntryScene = composeWizardScene<TapSwapEntryProps>(
   async (ctx) => {
     const chatId = ctx.chat.id
     const game = GamesData.TAPSWAP
-    let language = ctx.scene.state?.options?.language
+    ctx.scene.session.props.game = game
     
     try {
-      if(!language) {
-        const user = await Slices.user.crud.get({ chat_id: chatId })
-        language = Languages?.[user.item?.language] || 'ru'
-      }
-      
-      ctx.scene.state = {
-        ...ctx.scene.state,
-        options: {
-          ...ctx.scene.state.options,
-          language,
-          game,
-          entry: types.ENTRY,
-        },
-      }
-      ctx.i18n.locale(language)
-      
-      const activities = await Slices.activity.crud.gets({
-        data: {game: game.id}
+      const activities = await ActivityController.getActivities({
+        game: game?.id
       })
-      const admin = adminUsers.includes(chatId)
+      const admin = isAdmin(chatId)
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback(ctx.i18n.t('game.buttons.get_all'), ToMandatoryHandler.create(ScenesTypes.code.wizard.GET_ALL_CODES)),
@@ -52,7 +38,7 @@ export const createEntryScene = composeWizardScene(
           Markup.button.callback(ctx.i18n.t('game.buttons.create'), nextSceneHandler.create(ScenesTypes.code.wizard.ADD_CODE), !admin),
           Markup.button.callback('Создать активность', nextSceneHandler.create(ScenesTypes.activity.wizard.CREATE), !admin),
           ...activities?.items.sort((a, b) => a.id - b.id).map((activity) => Markup.button.callback(activity.name, goToActivityHandler.create(`${activity.id}`), !admin && !Boolean(activity.post_id))),
-          Markup.button.callback(ctx.i18n.t('game.buttons.back_to',{ menu_name: ctx.i18n.t('games.name')}), nextSceneHandler.create(ScenesTypes.menu.wizard.GAMES)),
+          Markup.button.callback(ctx.i18n.t('game.buttons.back_to',{ menu_name: ctx.i18n.t('games.name')}), 'back_to'),
         ],{ columns: 2 }
       )
       
@@ -68,33 +54,47 @@ export const createEntryScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const game = ctx.wizard.state?.options?.game
-    const callback_data = ctx.update?.callback_query?.data;
-    
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
+  async (ctx, done, back) => {
+    const game = ctx.scene.session.props.game
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        if( callback_data === 'back_to' ) {
+          await back(ScenesTypes.menu.wizard.GAMES)
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value, {
+            game,
+            entry: ctx.scene.session.current
+          })
         })
-        goToActivityHandler.on(callback_data, async (value) => {
-          ctx.scene.state.activity_id = value
-          ctx.scene.state.mandatory_channel_next = ScenesTypes.activity.wizard.ITEM
-          ctx.scene.state.nextScene = ScenesTypes.mandatorySubscription.wizard.MANDATORY;
+        await goToActivityHandler.on(callback_data, async (value) => {
+          await done(ScenesTypes.mandatorySubscription.wizard.MANDATORY, {
+            next_scene: ScenesTypes.activity.wizard.ITEM,
+            data: {
+              activity_id: value,
+              game,
+              entry: ctx.scene.session.current
+            }
+          })
         })
-        ToMandatoryHandler.on(callback_data, async (value) => {
-          ctx.scene.state.mandatory_channel_next = value
-          ctx.scene.state.nextScene = ScenesTypes.mandatorySubscription.wizard.MANDATORY;
+        await ToMandatoryHandler.on(callback_data, async (value) => {
+          await done(ScenesTypes.mandatorySubscription.wizard.MANDATORY, {
+            next_scene: value,
+            data: {
+              game
+            }
+          })
         })
       } else {
         await ctx.sendMessage(ctx.i18n.t('game.exit',{ menu_name: ctx.i18n.t('game.name',{ game_name:game.name }) }))
+        await done();
       }
       
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню', e))
     }
-    return done();
+    return;
   },
 );

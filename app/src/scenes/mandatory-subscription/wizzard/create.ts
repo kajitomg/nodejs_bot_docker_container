@@ -5,24 +5,25 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { adminUsers } from '../../../routes/admin-routes';
+import { IMandatoryChannel } from '../../../models/mandatory-channel/mandatory-channel';
+import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createCreateMandatoryChannelScene = composeWizardScene(
+interface MandatoryCreateProps {
+  channel: Partial<Omit<IMandatoryChannel, 'id'>>,
+  warning: string,
+}
+
+export const createCreateMandatoryChannelScene = composeWizardScene<MandatoryCreateProps>(
   async (ctx) => {
     try {
-      ctx.wizard.state.create_mandatory_channel = {
-        id: null,
-        link: null,
-        name: null,
-        description: null,
-        ...ctx.wizard.state.create_mandatory_channel,
-      }
       const chat_id = ctx.chat.id
+      if (!ctx.scene.session.props.channel) ctx.scene.session.props.channel = {}
+      const channel = ctx.scene.session.props.channel
       
-      const admin = adminUsers.includes(chat_id)
+      const admin = isAdmin(chat_id)
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback('Изменить ID', nextSceneHandler.create(types.CREATE_ID), !admin),
@@ -37,11 +38,11 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
       await send(ctx,
         fmt(
           bold('Меню Создание канала ОП'),'\n\n',
-          bold(`ID${ctx.wizard.state?.create_mandatory_channel?.id ? '' : '*'}: ${ctx.wizard.state?.create_mandatory_channel?.id || '-'}`),'\n\n',
-          bold(`Ссылка${ctx.wizard.state?.create_mandatory_channel?.link ? '' : '*'}: ${ctx.wizard.state?.create_mandatory_channel?.link || '-'}`),'\n\n',
-          bold(`Название${ctx.wizard.state?.create_mandatory_channel?.name ? '' : '*'}: ${ctx.wizard.state?.create_mandatory_channel?.name || '-'}`),'\n\n',
-          bold(`Описание: ${ctx.wizard.state?.create_mandatory_channel?.description || '-'}`),'\n\n',
-          ctx.wizard.state?.create_mandatory_channel?.warning ? fmt(italic(ctx.wizard.state?.create_mandatory_channel?.warning),'\n\n') : '',
+          bold(`ID${channel?.channel_id ? '' : '*'}: ${channel?.channel_id || '-'}`),'\n\n',
+          bold(`Ссылка${channel?.link ? '' : '*'}: ${channel?.link || '-'}`),'\n\n',
+          bold(`Название${channel?.name ? '' : '*'}: ${channel?.name || '-'}`),'\n\n',
+          bold(`Описание: ${channel?.description || '-'}`),'\n\n',
+          ctx.scene.session.props.warning ? fmt(italic(ctx.scene.session.props?.warning),'\n\n') : '',
           italic('Выберите интересующее вас действие:')
         )
         , markup)
@@ -49,44 +50,73 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Создание канала ОП', e))
     }
-    delete ctx.wizard.state?.create_mandatory_channel.warning
+    delete ctx.scene.session.props?.warning
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+    const callback_data = ctx.callbackQuery?.['data'];
+    const channel = ctx.scene.session.props.channel
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        await nextSceneHandler.on(callback_data, async (value) => {
+          switch (value) {
+            case types.CREATE_ID: {
+              await done(value, {
+                channel
+              })
+              return
+            }
+            case types.CREATE_LINK: {
+              await done(value, {
+                channel
+              })
+              return
+            }
+            case types.CREATE_NAME: {
+              await done(value, {
+                channel
+              })
+              return
+            }
+            case types.CREATE_DESCRIPTION: {
+              await done(value, {
+                channel
+              })
+              return
+            }
+            default: {
+              await done(value)
+            }
+          }
         })
         if (callback_data === 'create') {
-          if ( ctx.wizard.state.create_mandatory_channel.id && ctx.wizard.state.create_mandatory_channel.link && ctx.wizard.state.create_mandatory_channel.name ) {
+          if ( channel.channel_id && channel.link && channel.name ) {
             ctx.wizard.next();
-            return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+            return ctx.wizard['steps'][ctx.wizard.cursor](ctx);
           } else {
-            ctx.wizard.state.create_mandatory_channel.warning = 'Заполните все обязательные поля*';
-            ctx.wizard.state.nextScene = types.CREATE;
+            ctx.scene.session.props.warning = 'Заполните все обязательные поля*';
+            await done(types.CREATE);
           }
         }
       } else {
-        delete ctx.wizard.state.create_mandatory_channel
         await ctx.sendMessage('Вы вышли из сцены Создание канала ОП')
+        await done();
       }
       
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Создание канала ОП', e))
     }
-    return done();
+    return;
   },
   async (ctx) => {
+    const channel = ctx.scene.session.props?.channel
     try {
-      
       await mandatoryChannelController.createChannel({
-        channel_id: ctx.wizard.state.create_mandatory_channel.id,
-        name: ctx.wizard.state.create_mandatory_channel.name,
-        description: ctx.wizard.state.create_mandatory_channel.description,
-        link: ctx.wizard.state.create_mandatory_channel.link,
+        channel_id: channel.channel_id,
+        name: channel.name,
+        description: channel.description,
+        link: channel.link,
       })
       
       const markup = Markup.inlineKeyboard(
@@ -99,10 +129,10 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
         fmt(
           bold('Меню Создание канала ОП'),'\n\n',
           italic('Канал успешно добавлен!','\n\n',
-          bold(`ID ${ctx.wizard.state?.create_mandatory_channel?.id || '*'}`),'\n\n',
-          bold(`Ссылка ${ctx.wizard.state?.create_mandatory_channel?.link || '*'}`),'\n\n',
-          bold(`Название ${ctx.wizard.state?.create_mandatory_channel?.name || '*'}`),'\n\n',
-          bold(`Описание ${ctx.wizard.state?.create_mandatory_channel?.description || '*'}`)
+          bold(`ID ${channel?.channel_id || '*'}`),'\n\n',
+          bold(`Ссылка ${channel?.link || '*'}`),'\n\n',
+          bold(`Название ${channel?.name || '*'}`),'\n\n',
+          bold(`Описание ${channel?.description || '*'}`)
           ))
         , markup)
       
@@ -112,21 +142,21 @@ export const createCreateMandatoryChannelScene = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value);
         })
       } else {
         await ctx.sendMessage('Вы вышли из сцены Создание канала ОП')
+        await done();
       }
-      delete ctx.wizard.state.create_mandatory_channel
       
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Создание канала ОП', e))
     }
-    return done();
+    return;
   },
 );

@@ -1,21 +1,27 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, FmtString, italic, quote, underline } from 'telegraf/format';
+import activityController from '../../../controllers/activity-controller';
 import postController from '../../../controllers/post-controller';
 import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { formatText } from '../../../helpers/post-template/format-text';
 import sendMessage from '../../../helpers/send-message';
-import Slices from '../../../slices';
+import { Post } from '../../../models/post/post-model';
 import { ScenesTypes } from '../../index';
-import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 const createTemplateHandler = new CallbackQueryWrapper('create_template')
 
-export const createWizardPostTemplateCreate = composeWizardScene(
+interface BodyItemProps {
+  activity_id?: number,
+  post?: Partial<Omit<Post, 'id' | 'type' | 'media'>>,
+  warning?: string
+}
+
+export const createWizardPostTemplateCreate = composeWizardScene<BodyItemProps>(
   async (ctx) => {
-    if (!ctx.wizard.state.post_template) ctx.wizard.state.post_template = {}
+    if (!ctx.scene.session.props.post) ctx.scene.session.props.post = {}
     
     try {
       const markup = Markup.inlineKeyboard(
@@ -46,24 +52,24 @@ export const createWizardPostTemplateCreate = composeWizardScene(
     return ctx.wizard.next();
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
-    const message_text = ctx.message?.text;
-    const message_entities = ctx.message?.entities
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
+    const message_entities = ctx.message?.['entities']
+    
+    let next_scene
     
     try {
       await sendMessage(ctx, {}, {clear_markup: true})
       
       if (callback_data) {
         await nextSceneHandler.on(callback_data, async (value) => {
-          delete ctx.wizard.state.post_template
-          ctx.wizard.state.nextScene = value;
+          next_scene = value;
         })
+        await done(next_scene);
       } else {
-        //const reg = new RegExp(`{{([^}]+)}}`, 'g')
-        //const variables = message_text.match(reg)?.map((value) => ({name: value.substring(2, value.length - 2)}))
         
-        if (message_text) ctx.wizard.state.post_template.template = message_text
-        if (message_text) ctx.wizard.state.post_template.entities = message_entities
+        if (message_text) ctx.scene.session.props.post.template = message_text
+        if (message_text) ctx.scene.session.props.post.entities = message_entities
         
         const markup = Markup.inlineKeyboard(
           [
@@ -79,28 +85,30 @@ export const createWizardPostTemplateCreate = composeWizardScene(
               ),
             extra: markup
           })
-        return ctx.wizard.next();
+        await ctx.wizard.next();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Сцена создания шаблона поста', e))
     }
-    return done();
+    return;
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
-    const message_text = ctx.message?.text;
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
+    
+    let next_scene
     
     try {
       await sendMessage(ctx, {}, {clear_markup: true})
       
       if (callback_data) {
         await nextSceneHandler.on(callback_data, async (value) => {
-          delete ctx.wizard.state.post_template
-          ctx.wizard.state.nextScene = value;
+          next_scene = value;
         })
+        await done(next_scene);
       } else {
         
-        if (message_text) ctx.wizard.state.post_template.name = message_text
+        if (message_text) ctx.scene.session.props.post.name = message_text
         
         const markup = Markup.inlineKeyboard(
           [
@@ -110,9 +118,9 @@ export const createWizardPostTemplateCreate = composeWizardScene(
         )
         
         const formatted = formatText(
-          ctx.wizard.state.post_template?.template,
-          ctx.wizard.state.post_template?.variables,
-          ctx.wizard.state.post_template?.entities
+          ctx.scene.session.props.post?.template,
+          ctx.scene.session.props.post?.variables,
+          ctx.scene.session.props.post?.entities
         )
         
         const fmtString = new FmtString(formatted.text, formatted.entities)
@@ -121,62 +129,64 @@ export const createWizardPostTemplateCreate = composeWizardScene(
           ctx,{
             text: fmt(
               bold('Шаблон поста'),'\n\n',
-              bold(`Название${!ctx.wizard.state.post_template?.name ? '*' : ''}: ${ctx.wizard.state.post_template?.name || '-'}`),'\n\n',
+              bold(`Название${!ctx.scene.session.props.post?.name ? '*' : ''}: ${ctx.scene.session.props.post?.name || '-'}`),'\n\n',
               quote(fmt(fmtString)),'\n\n',
-              ctx.wizard.state.post_template?.warning ? fmt(italic(ctx.wizard.state.post_template?.warning),'\n\n') : '',
+              ctx.scene.session.props?.warning ? fmt(italic(ctx.scene.session.props?.warning),'\n\n') : '',
               italic('Выберите интересующее вас действие:')
             ),
             extra: markup
           })
-        return ctx.wizard.next();
+        await ctx.wizard.next();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Сцена создания шаблона поста', e))
     }
-    return done();
+    return;
   },
   async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+    const callback_data = ctx.callbackQuery?.['data'];
+    
+    let next_scene
     
     try {
       if (callback_data) {
         await nextSceneHandler.on(callback_data, async (value) => {
-          delete ctx.wizard.state.post_template
-          ctx.wizard.state.nextScene = value;
+          next_scene = value;
         })
         await createTemplateHandler.on(callback_data, async (value) => {
-          await postController.createTemplate({
-            name: ctx.wizard.state.post_template?.name,
-            template: ctx.wizard.state.post_template?.template,
-            entities: ctx.wizard.state.post_template?.entities,
-          })
-          if (ctx.wizard.state.activity_id) {
+          const template = (await postController.createTemplate({
+            name: ctx.scene.session.props.post?.name,
+            template: ctx.scene.session.props.post?.template,
+            entities: ctx.scene.session.props.post?.entities,
+          })).item
+          if (ctx.scene.session.props.activity_id) {
             const reg = new RegExp(`{{([^}]+)}}`, 'g')
-            const variables = ctx.wizard.state.post_template?.template.match(reg)?.map((value) => ({name: value.substring(2, value.length - 2)}))
+            const variables = ctx.scene.session.props.post?.template.match(reg)?.map((value) => ({name: value.substring(2, value.length - 2)}))
+            
             const post = await postController.createBody({
-              name: ctx.wizard.state.post_template?.name,
-              template: ctx.wizard.state.post_template?.template,
-              entities: ctx.wizard.state.post_template?.entities,
+              template_id: template.id,
+              name: ctx.scene.session.props.post?.name,
               variables
             })
-            await Slices.activity.crud.update({data:{
-              id: ctx.wizard.state.activity_id,
+            console.log(post.item, post.item.id)
+            await activityController.updateActivity({
+              id: ctx.scene.session.props.activity_id,
               body_id: post.item?.id
-            }})
+            })
             
           }
           const markup = Markup.inlineKeyboard(
             [
               //Markup.button.callback('Создать новый шаблон', nextSceneHandler.create(types.TEMPLATE_CREATE)),
               //Markup.button.callback('Список всех шаблонов', nextSceneHandler.create(types.TEMPLATE_LIST)),
-              Markup.button.callback('Назад в меню', nextSceneHandler.create(ScenesTypes.activity.wizard.TEMPLATE_CHANGE)),
+              Markup.button.callback('Назад в меню', 'back'),
             ],{ columns: 2 }
           )
           
           const formatted = formatText(
-            ctx.wizard.state.post_template?.template,
-            ctx.wizard.state.post_template?.variables,
-            ctx.wizard.state.post_template?.entities
+            ctx.scene.session.props.post?.template,
+            ctx.scene.session.props.post?.variables,
+            ctx.scene.session.props.post?.entities
           )
           
           const fmtString = new FmtString(formatted.text, formatted.entities)
@@ -185,7 +195,7 @@ export const createWizardPostTemplateCreate = composeWizardScene(
             ctx,{
               text: fmt(
                 bold('Шаблон поста'),'\n\n',
-                bold(`Название${!ctx.wizard.state.post_template?.name ? '*':''}: ${ctx.wizard.state.post_template?.name ?? '-'}`),'\n\n',
+                bold(`Название${!ctx.scene.session.props.post?.name ? '*':''}: ${ctx.scene.session.props.post?.name ?? '-'}`),'\n\n',
                 quote(fmt(fmtString)),'\n\n',
                 bold('Шаблон успешно создан'),'\n\n',
                 italic('Выберите интересующее вас действие:')
@@ -193,33 +203,31 @@ export const createWizardPostTemplateCreate = composeWizardScene(
               extra: markup
             })
         })
-        return ctx.wizard.next();
+        await ctx.wizard.next();
       } else {
-        delete ctx.wizard.state.post_template
         await sendMessage(ctx,{ text: 'Вы вышли из сцены создания шаблона поста' })
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Сцена создания шаблона поста', e))
     }
-    return done();
+    return;
   },
   
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        await nextSceneHandler.on(callback_data, async (value) => {
-          delete ctx.wizard.state.post_template
-          ctx.wizard.state.nextScene = value;
-        })
+        if (callback_data === 'back') {
+          await back();
+        }
       } else {
-        delete ctx.wizard.state.post_template
-        await sendMessage(ctx,{ text: 'Вы вышли из сцены создания шаблона поста' })
+        await sendMessage(ctx,{ text: 'Вы вышли из сцены создания шаблона поста' });
+        await done();
       }
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Сцена создания шаблона поста', e))
     }
-    return done();
+    return;
   }
 )

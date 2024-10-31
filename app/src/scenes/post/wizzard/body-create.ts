@@ -3,21 +3,26 @@ import postController from '../../../controllers/post-controller';
 import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
+import { Post } from '../../../models/post/post-model';
 import { isAdmin } from '../../../routes/admin-routes';
 import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createWizardPostBodyCreate = composeWizardScene(
+interface BodyCreateProps {
+  post_id: number,
+  post?: Post
+}
+
+export const createWizardPostBodyCreate = composeWizardScene<BodyCreateProps>(
   async (ctx) => {
-    ctx.wizard.state.parent_scene = types.BODY_CREATE
     const chat_id = ctx.chat.id
     const admin = isAdmin(chat_id)
-    if (!ctx.wizard.state.post) {
+    if (!ctx.scene.session.props.post) {
       const post = await postController.getPost({
-        id: ctx.wizard.state.post_id
+        id: ctx.scene.session.props.post_id
       })
-      ctx.wizard.state.post = {
+      ctx.scene.session.props.post = {
         ...post.item,
         name: undefined
       }

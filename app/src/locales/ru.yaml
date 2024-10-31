@@ -43,6 +43,12 @@ games:
     tapswap: TapSwap
     xempire: X Empire
     blum: Blum
+    cats: Cats
+    hot: HOT Wallet
+    cityholder: City Holder
+    bums: BUMS
+    paws: PAWS
+    hamsterkombat: Hamster Kombat
     back: *back
 
 profile:
@@ -86,6 +92,8 @@ game:
     moderate: *moderate_codes
     create: *create_code
     back_to: *back_to
+    create_activity: Создать активность
+    bot_for_gencodes: Бот для генерации кодов
 
 code_create:
   name: Создание кода ${game_name}

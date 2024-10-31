@@ -4,9 +4,7 @@ import { HandlerError } from '../../../exceptions/api-error';
 import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import { adminUsers } from '../../../routes/admin-routes';
-import Slices from '../../../slices';
+import { isAdmin } from '../../../routes/admin-routes';
 import { ScenesTypes } from '../../index';
 import types from './types';
 
@@ -16,27 +14,13 @@ export const createEntryBroadcastScene = composeWizardScene(
   async (ctx) => {
     const chat_id = ctx.chat.id
     
-    const admin = adminUsers.includes(chat_id)
-    let language = ctx.scene.state?.options?.language
+    const admin = isAdmin(chat_id)
     try {
-      if(!language) {
-        const user = await Slices.user.crud.get({ chat_id })
-        language = Languages?.[user.item?.language] || 'ru'
-      }
-      
-      ctx.scene.state = {
-        ...ctx.scene.state,
-        options: {
-          ...ctx.scene.state.options,
-          language
-        }
-      }
-      ctx.i18n.locale(language)
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback('Получить текущее сообщение', nextSceneHandler.create(types.GET), !admin),
           Markup.button.callback('Создать новое сообщение', nextSceneHandler.create(types.CREATE), !admin),
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(ScenesTypes.menu.wizard.SERVICES), !admin),
+          Markup.button.callback('Назад в меню', 'back_to', !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Рассылка'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
@@ -45,22 +29,25 @@ export const createEntryBroadcastScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
-          
+        if (callback_data === 'back_to') {
+          await back(ScenesTypes.menu.wizard.SERVICES)
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value);
         })
       } else {
         await ctx.sendMessage('Вы вышли из Рассылки')
+        await done();
       }
     } catch (e) {
-      console.error(new HandlerError(400, 'Ошибка: Рассылка', e))
+      console.error(new HandlerError(400, 'Ошибка: Рассылка', e));
     }
     
-    return done();
+    return;
   },
 );

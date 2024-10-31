@@ -9,7 +9,7 @@ import send from '../../../helpers/send';
 import sendTest from '../../../helpers/send-message';
 import { adminUsers } from '../../../routes/admin-routes';
 import types from './types';
-
+/*
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
 export const createCreatePostScene = composeWizardScene(
@@ -133,4 +133,4 @@ export const createCreatePostScene = composeWizardScene(
     }
     return done();
   },
-);
+);*/

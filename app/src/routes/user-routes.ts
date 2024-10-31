@@ -1,11 +1,13 @@
 import { Composer, Scenes } from 'telegraf';
 import { HandlerError } from '../exceptions/api-error';
 import start from '../handlers/start';
+import { MyContext } from '../helpers/compose-wizard-scene';
+import { GamesData } from '../models/game';
 import { Languages } from '../models/user/user-model';
 import { ScenesTypes } from '../scenes';
 import Slices from '../slices';
 
-const userBot = new Composer<Scenes.SceneContext>();
+const userBot = new Composer<MyContext>();
 
 userBot.start(start)
 
@@ -22,20 +24,58 @@ userBot.command('games', async ctx => {
 })
 
 userBot.command('tapswap', async ctx => {
-  // @ts-ignore
-  ctx.scene.state.mandatory_channel_next = ScenesTypes.tapSwap.wizard.ENTRY
-  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
-})
-
-userBot.command('xempire', async ctx => {
-  // @ts-ignore
-  ctx.scene.state.mandatory_channel_next = ScenesTypes.xEmpire.wizard.ENTRY
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.tapSwap.wizard.ENTRY
+  }
   return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 
 userBot.command('blum', async ctx => {
-  // @ts-ignore
-  ctx.scene.state.mandatory_channel_next = ScenesTypes.blum.wizard.ENTRY
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.blum.wizard.ENTRY
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})
+
+userBot.command('cats', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.cats.wizard.ENTRY,
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})
+/*
+userBot.command('paws', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.paws.wizard.ENTRY,
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})*/
+
+userBot.command('bums', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.bums.wizard.ENTRY,
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})
+
+userBot.command('cityholder', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.cityholder.wizard.ENTRY,
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})
+
+userBot.command('hot', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.hot.wizard.ENTRY,
+  }
+  return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
+})
+
+userBot.command('hamsterkombat', async ctx => {
+  ctx.scene.session.props = {
+    next_scene: ScenesTypes.hamsterkombat.wizard.ENTRY,
+  }
   return await ctx.scene.enter(ScenesTypes.mandatorySubscription.wizard.MANDATORY, ctx.scene.state)
 })
 

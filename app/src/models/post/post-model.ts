@@ -70,7 +70,7 @@ export type PostMedia = {
 
 export type Variables = {
   name: string,
-  value: string
+  value?: string
 }
 
 export enum PostTypes {

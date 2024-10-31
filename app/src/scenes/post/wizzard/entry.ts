@@ -16,12 +16,12 @@ export const createEntryPostScene = composeWizardScene(
       const chat_id = ctx.chat.id
       
       const admin = adminUsers.includes(chat_id)
-      delete ctx.wizard.state?.create_mandatory_channel
+      
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback('Создать шаблон', nextSceneHandler.create(types.TEMPLATE_CREATE), !admin),
           Markup.button.callback('Список постов', nextSceneHandler.create(types.LIST), !admin),
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(ScenesTypes.menu.wizard.SERVICES), !admin),
+          Markup.button.callback('Назад в меню', 'back', !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Меню Поста'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
@@ -31,21 +31,25 @@ export const createEntryPostScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        if ( callback_data === 'back' ) {
+          await back();
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value);
         })
       } else {
         await ctx.sendMessage('Вы вышли из сцены Меню постов')
+        await done();
       }
       
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню постов', e))
     }
-    return done();
+    return;
   },
 );

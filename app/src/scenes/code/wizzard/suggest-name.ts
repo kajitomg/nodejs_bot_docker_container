@@ -1,81 +1,61 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
-import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
+import sendMessage from '../../../helpers/send-message';
+import { ICode } from '../../../models/code/code-model';
+import { Game } from '../../../models/game';
 import types from './types';
 
-const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
-const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
+interface CodeSuggestNameProps {
+  game: Game,
+  code: Partial<Pick<ICode, 'name' | 'content'>>,
+}
 
-export const createGiveCodeNameScene = composeWizardScene(
+export const createGiveCodeNameScene = composeWizardScene<CodeSuggestNameProps>(
   async (ctx) => {
-    const game = ctx.wizard.state.options.game
-    
-    const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
-    
-    if(!language) {
-      const user = await Slices.user.crud.get({ chat_id })
-      language = Languages?.[user.item?.language] || 'ru'
-    }
-    
-    if (ctx.wizard.state.options) {
-      ctx.wizard.state.options.language = language
-    } else {
-      ctx.wizard.state.options = {
-        language
-      }
-    }
-    ctx.i18n.locale(language)
+    const game = ctx.scene.session?.props?.game
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), nextSceneHandler.create(types.GIVE_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_suggest.buttons.back'), 'back'),
       ],{ columns: 2 }
     )
     
     const text = genMessage({
       header: genMessage({
         header: bold(ctx.i18n.t('code_suggest.name',{ game_name: game.name })),
-        body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.name')}${ctx.wizard.state.code_name ? '' : '*'}: `), bold(ctx.wizard.state.code_name ? ctx.wizard.state.code_name : '-')),
+        body: fmt(fmt(`- ${ctx.i18n.t('code_suggest.data.name')}${ctx.scene.session?.props.code.name ? '' : '*'}: `), bold(ctx.scene.session?.props.code.name ? ctx.scene.session?.props.code.name : '-')),
       }),
       body: italic(ctx.i18n.t('code_suggest.data.send_value',{ value: ctx.i18n.t('code_suggest.data.name') })),
     })
     
-    const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })    //@ts-ignore
-    ctx.wizard.state.delete_message_id = message?.message_id
+    await sendMessage(ctx, {
+      text,
+      extra: markup
+    })
+    
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const chatId = ctx.chat?.id;
-    const callback_data = ctx.update?.callback_query?.data;
-    const messageText = ctx.message?.text;
-    
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
-    
-    ctx.telegram.editMessageReplyMarkup(chatId, ctx.wizard.state.delete_message_id, undefined, undefined)
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
+
+    await sendMessage(ctx, {}, {clear_markup: true})
     
     if (callback_data) {
-      nextSceneHandler.on(callback_data, async (value) => {
-        ctx.wizard.state.nextScene = value;
-      })
-    } else {
-      if (ctx.wizard.state.code_content) {
-        ctx.wizard.state.nextScene = types.GIVE_CODE;
-      } else {
-        ctx.wizard.state.nextScene = types.GIVE_CODE_CONTENT;
+      if (callback_data === 'back') {
+        await back();
       }
-      ctx.wizard.state.code_name = messageText;
+    } else {
+      ctx.scene.session.props.code.name = message_text
+      if (ctx.scene.session.props.code.content) {
+        await done(types.GIVE_CODE, { ...ctx.scene.session.props })
+      } else {
+        await done(types.GIVE_CODE_CONTENT, { ...ctx.scene.session.props })
+      }
     }
     
-    if (ctx.wizard.state.warning) {
-      delete ctx.wizard.state.warning;
-    }
-    
-    return done();
+    return;
   },
 );

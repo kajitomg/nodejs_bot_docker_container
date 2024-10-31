@@ -64,7 +64,7 @@ export default async (
     extra?: ExtraEditMessageText,
   },
   options?: {
-    new_message?: boolean,
+    edit_message?: boolean,
     clear_markup?: boolean,
     clear_media?: boolean,
   }) => {
@@ -81,8 +81,14 @@ export default async (
       }
       if (data.media) {
         return lastMessage = await sendNewMedia(ctx, data)
-      } else if (data.text) {
-        return lastMessage = await ctx.reply(data.text, data.extra);
+      } else if (data.text){
+        if (options?.edit_message && lastMessage) {
+          return lastMessage = await ctx.telegram.editMessageText(ctx.chat.id, lastMessage.message_id, undefined, data.text, data.extra);
+        } else if (options?.edit_message) {
+          return lastMessage = await ctx.editMessageText(data.text, data.extra);
+        } else {
+          return lastMessage = await ctx.reply(data.text, data.extra);
+        }
       } else {
         return
       }

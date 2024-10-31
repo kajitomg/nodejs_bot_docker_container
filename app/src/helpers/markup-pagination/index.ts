@@ -1,14 +1,17 @@
 import { Markup } from 'telegraf';
 
-export default class {
-  private _page: number = 1
-  private _maxPages: number = this._page
+export default class MarkupPagination {
+  _page: number = 1
+  _maxPages: number = this._page
   prevMaxPages?: number
   prevPage?: number
   
-  constructor(page: number, maxPages: number) {
+  constructor(page: number, maxPages: number, prevMaxPages?: number, prevPage?: number) {
     this._page = page
     this.maxPages = maxPages
+    if (prevMaxPages) this.prevMaxPages = prevMaxPages
+    if (prevPage) this.prevPage = prevPage
+    
   }
   
   prevPageButton = (text: string = '<<<') => Markup.button.callback(text, 'prev_page')

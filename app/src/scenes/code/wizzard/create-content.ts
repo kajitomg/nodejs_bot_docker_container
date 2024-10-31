@@ -1,78 +1,56 @@
 import { Markup } from 'telegraf';
 import { bold, fmt, italic } from 'telegraf/format';
-import { CallbackQueryWrapper } from '../../../helpers/callback-wrapper';
 import { composeWizardScene } from '../../../helpers/compose-wizard-scene';
 import { genMessage } from '../../../helpers/create-message-sample';
-import send from '../../../helpers/send';
-import { Languages } from '../../../models/user/user-model';
-import Slices from '../../../slices';
+import sendMessage from '../../../helpers/send-message';
+import { ICode } from '../../../models/code/code-model';
+import { Game } from '../../../models/game';
 import types from './types';
 
-const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
-const ToMandatoryHandler = new CallbackQueryWrapper('to_mandatory')
+interface CodeCreateContentProps {
+  game: Game,
+  code: Partial<Pick<ICode, 'name' | 'content'>>,
+}
 
-export const createAddCodeContentScene = composeWizardScene(
+export const createAddCodeContentScene = composeWizardScene<CodeCreateContentProps>(
   async (ctx) => {
-    const game = ctx.wizard.state.options.game
-    
-    const chat_id = ctx.chat.id
-    let language = ctx.scene.state?.options?.language
-    
-    if(!language) {
-      const user = await Slices.user.crud.get({ chat_id })
-      language = Languages?.[user.item?.language] || 'ru'
-    }
-    
-    if (ctx.wizard.state.options) {
-      ctx.wizard.state.options.language = language
-    } else {
-      ctx.wizard.state.options = {
-        language
-      }
-    }
-    ctx.i18n.locale(language)
+    const game = ctx.scene.session?.props?.game
     
     const markup = Markup.inlineKeyboard(
       [
-        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), nextSceneHandler.create(types.ADD_CODE)),
+        Markup.button.callback(ctx.i18n.t('code_create.buttons.back'), 'back'),
       ],{ columns: 2 }
     )
     const text = genMessage({
       header: genMessage({
         header: bold(ctx.i18n.t('code_create.name',{ game_name:game.name })),
-        body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.wizard.state.code_content ? '' : '*'}: `), bold(ctx.wizard.state.code_content ? ctx.wizard.state.code_content : '-')),
+        body: fmt(fmt(`- ${ctx.i18n.t('code_create.data.content')}${ctx.scene.session?.props.code.content ? '' : '*'}: `), bold(ctx.scene.session?.props.code.content ? ctx.scene.session?.props.code.content : '-')),
       }),
       body: italic(ctx.i18n.t('code_create.data.send_value',{ value: ctx.i18n.t('code_create.data.content') })),
     })
     
-    const message = await send(ctx, text, { parse_mode: 'MarkdownV2', reply_markup: markup.reply_markup })
-    //@ts-ignore
-    ctx.wizard.state.delete_message_id = message?.message_id
+    await sendMessage(ctx, {
+      text,
+      extra: markup
+    })
     
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const { delete_message_id } = ctx.wizard.state;
-    const chatId = ctx.chat?.id;
-    const callback_data = ctx.update?.callback_query?.data;
-    const messageText = ctx.message?.text;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
+    const message_text = ctx.message?.['text'];
     
-    ctx.i18n.locale(ctx.scene.state?.options?.language)
-    
-    ctx.telegram.editMessageReplyMarkup(chatId, delete_message_id, undefined, undefined)
+    await sendMessage(ctx, {}, {clear_markup: true})
     
     if (callback_data) {
-      nextSceneHandler.on(callback_data, async (value) => {
-        ctx.wizard.state.nextScene = value;
-      })
+      if (callback_data === 'back') {
+        await back();
+      }
     } else {
-      ctx.wizard.state.nextScene = types.ADD_CODE;
-      ctx.wizard.state.code_content = messageText;
-    }
-    if (ctx.wizard.state.warning) {
-      delete ctx.wizard.state.warning;
+      ctx.scene.session.props.code.content = message_text
+      await done(types.ADD_CODE, { ...ctx.scene.session.props })
     }
     
-    return done();
+    return;
   },
 );

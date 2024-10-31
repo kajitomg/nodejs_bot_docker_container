@@ -10,18 +10,22 @@ import types from './types';
 
 const nextSceneHandler = CallbackQueryWrapper.nextSceneHandler()
 
-export const createEntryMandatoryChannelScene = composeWizardScene(
+interface MandatoryEntryProps {
+  next_scene: string,
+  data: Record<string, unknown>
+}
+
+export const createEntryMandatoryChannelScene = composeWizardScene<MandatoryEntryProps>(
   async (ctx) => {
     try {
       const chat_id = ctx.chat.id
       
       const admin = adminUsers.includes(chat_id)
-      delete ctx.wizard.state?.create_mandatory_channel
       const markup = Markup.inlineKeyboard(
         [
           Markup.button.callback('Добавить канал', nextSceneHandler.create(types.CREATE), !admin),
           Markup.button.callback('Список каналов', nextSceneHandler.create(types.LIST), !admin),
-          Markup.button.callback('Назад в меню', nextSceneHandler.create(ScenesTypes.menu.wizard.SERVICES), !admin),
+          Markup.button.callback('Назад в меню', 'back_to', !admin),
         ],{ columns: 2 }
       )
       await send(ctx, fmt(bold('Меню ОП'),'\n\n',italic('Выберите интересующее вас действие:')), markup)
@@ -31,21 +35,25 @@ export const createEntryMandatoryChannelScene = composeWizardScene(
     }
     return ctx.wizard.next();
   },
-  async (ctx, done) => {
-    const callback_data = ctx.update?.callback_query?.data;
+  async (ctx, done, back) => {
+    const callback_data = ctx.callbackQuery?.['data'];
     
     try {
       if (callback_data) {
-        nextSceneHandler.on(callback_data, async (value) => {
-          ctx.wizard.state.nextScene = value;
+        if( callback_data === 'back_to' ){
+          await back(ScenesTypes.menu.wizard.SERVICES)
+        }
+        await nextSceneHandler.on(callback_data, async (value) => {
+          await done(value);
         })
       } else {
         await ctx.sendMessage('Вы вышли из сцены Меню ОП')
+        await done();
       }
       
     } catch (e) {
       console.error(new HandlerError(400, 'Ошибка: Меню ОП', e))
     }
-    return done();
+    return;
   },
 );

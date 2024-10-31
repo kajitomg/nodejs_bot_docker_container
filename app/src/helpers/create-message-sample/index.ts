@@ -19,7 +19,7 @@ interface IResult {
 }
 
 export class createMessageSample<T> {
-  private _data?:T
+  _data?:T
   private readonly sample: (data:T) => IResult
   private readonly content_wait: FmtString
   private _is_loading?: boolean = false

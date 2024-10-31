@@ -13,5 +13,4 @@ export default {
   GIVE_CODE_ADD_TO_DB: 'give_code_add_to_db',
   GIVE_CODE_END_DIALOG: 'give_code_end_dialog',
   PULL_REQUEST_CODE: 'pull_request_code',
-  PULL_REQUEST_CODE_HANDLER: 'pull_request_code_handler',
 }
